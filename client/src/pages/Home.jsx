@@ -10,7 +10,7 @@ const Home = () => {
                 <img src="/goblet1.png" alt="Jerry the Goblin" className="goblet-icon" />
             </div>
             <h1>Jerry's Gobblet</h1>
-            <p className="challenge-text">Think you have what it takes to beat Jerry? 🤔</p>
+            <div className="challenge-text">Think you have what it takes to beat Jerry? 🤔</div>
             <div className="subtitle">The Ultimate Strategy Game</div>
 
             <div className="menu-buttons">

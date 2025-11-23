@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 const GoblinPiece = ({ color, size }) => {
     // Scale the SVG based on size (1-4) with less dramatic scaling
     // Size 1 = 0.8, Size 2 = 0.9, Size 3 = 1.0, Size 4 = 1.1
     const scale = 0.7 + (size * 0.1);
+
+    // Random delay between 0-15 seconds to stagger animations
+    const animationDelay = useMemo(() => Math.random() * 15, []);
 
     return (
         <svg
@@ -12,18 +15,27 @@ const GoblinPiece = ({ color, size }) => {
                 width: '100%',
                 height: '100%',
                 transform: `scale(${scale})`,
+                overflow: 'visible'
             }}
         >
             {/* Feather/antenna on top - angled */}
-            <ellipse
-                cx="55"
-                cy="8"
-                rx="6"
-                ry="14"
-                fill={color}
-                opacity="0.85"
-                transform="rotate(25 55 8)"
-            />
+            <g
+                style={{
+                    animation: `goblin-feather-wiggle 3s ease-in-out infinite`,
+                    animationDelay: `${animationDelay}s`,
+                    transformOrigin: '52px 20px'
+                }}
+            >
+                <ellipse
+                    cx="52"
+                    cy="12"
+                    rx="4"
+                    ry="10"
+                    fill={color}
+                    opacity="1"
+                    transform="rotate(20 52 12)"
+                />
+            </g>
 
 
             {/* Main body - rounded top, square bottom */}
@@ -37,6 +49,11 @@ const GoblinPiece = ({ color, size }) => {
                 fill={color}
                 stroke="rgba(0,0,0,0.15)"
                 strokeWidth="1"
+                style={{
+                    animation: `goblin-subtle-wobble 5s ease-in-out infinite`,
+                    animationDelay: `${animationDelay}s`,
+                    transformOrigin: 'center'
+                }}
             />
 
             {/* Subtle highlight for 3D effect on body */}
@@ -74,13 +91,25 @@ const GoblinPiece = ({ color, size }) => {
 
             {/* Left eye - white circle with black pupil clipped */}
             <circle cx="42" cy="54" r="7" fill="white" />
-            <g clipPath="url(#leftEyeClip)">
+            <g
+                clipPath="url(#leftEyeClip)"
+                style={{
+                    animation: `goblin-eye-look 6s ease-in-out infinite`,
+                    animationDelay: `${animationDelay}s`
+                }}
+            >
                 <circle cx="43" cy="53" r="4.5" fill="black" />
             </g>
 
             {/* Right eye - white circle with black pupil clipped */}
             <circle cx="58" cy="54" r="7" fill="white" />
-            <g clipPath="url(#rightEyeClip)">
+            <g
+                clipPath="url(#rightEyeClip)"
+                style={{
+                    animation: `goblin-eye-look 6s ease-in-out infinite`,
+                    animationDelay: `${animationDelay}s`
+                }}
+            >
                 <circle cx="59" cy="53" r="4.5" fill="black" />
             </g>
 
@@ -104,6 +133,11 @@ const GoblinPiece = ({ color, size }) => {
                 fill="none"
                 strokeLinecap="round"
                 opacity="0.7"
+                style={{
+                    animation: `goblin-arm-wave 4s ease-in-out infinite`,
+                    animationDelay: `${animationDelay}s`,
+                    transformOrigin: '25px 55px'
+                }}
             />
             <path
                 d="M 75 55 Q 80 58, 78 62"
@@ -112,6 +146,11 @@ const GoblinPiece = ({ color, size }) => {
                 fill="none"
                 strokeLinecap="round"
                 opacity="0.7"
+                style={{
+                    animation: `goblin-arm-wave 4s ease-in-out infinite`,
+                    animationDelay: `${animationDelay + 0.2}s`,
+                    transformOrigin: '75px 55px'
+                }}
             />
         </svg>
     );

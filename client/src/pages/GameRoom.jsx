@@ -11,11 +11,9 @@ import PlayerHand from '../components/PlayerHand';
 // Actually, let's keep the socket in a separate module or pass it as a prop if we want it persistent.
 // But for "Join Game" flow, we might want a fresh connection or just emit events.
 
-// Let's create a socket singleton for simplicity in this file for now, 
-// or better, pass it from App or a Context. 
+// Let's create a socket singleton for simplicity in this file for now,
+// or better, pass it from App or a Context.
 // Given the scope, I'll instantiate it here, but we need to handle the "color" prop.
-
-let socket;
 
 const GameRoom = () => {
     const location = useLocation();
@@ -27,17 +25,19 @@ const GameRoom = () => {
     const [playerId, setPlayerId] = useState(null);
     const [selection, setSelection] = useState(null);
     const [viewingBoard, setViewingBoard] = useState(false);
+    const [lastMove, setLastMove] = useState(null);
     const socketRef = useRef(null);
 
     useEffect(() => {
         // Use environment variable for backend URL, fallback to localhost for development
         const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-        socket = io(backendUrl, {
+        const socket = io(backendUrl, {
             transports: ['websocket'],
         });
 
+        socketRef.current = socket;
+
         function onConnect() {
-            console.log('Connected with ID:', socket.id);
             setIsConnected(true);
             setPlayerId(socket.id);
             // Join game with selected color
@@ -45,12 +45,10 @@ const GameRoom = () => {
         }
 
         function onDisconnect() {
-            console.log('Disconnected');
             setIsConnected(false);
         }
 
         function onGameUpdate(state) {
-            console.log('Game update:', state);
             setGameState(state);
             setSelection(null);
         }
@@ -60,7 +58,11 @@ const GameRoom = () => {
         socket.on('game_update', onGameUpdate);
 
         return () => {
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+            socket.off('game_update', onGameUpdate);
             socket.disconnect();
+            socketRef.current = null;
         };
     }, [color]);
 
@@ -70,6 +72,17 @@ const GameRoom = () => {
             setViewingBoard(false);
         }
     }, [gameState?.state]);
+
+    // Auto-clear last move highlighting after 3 seconds
+    useEffect(() => {
+        if (gameState?.lastMove) {
+            setLastMove(gameState.lastMove);
+            const timer = setTimeout(() => {
+                setLastMove(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [gameState?.lastMove]);
 
     const handleHandPieceClick = (stackIndex) => {
         if (!gameState || gameState.winner) return;
@@ -85,7 +98,7 @@ const GameRoom = () => {
     };
 
     const handleBoardCellClick = (row, col) => {
-        if (!gameState) return;
+        if (!gameState || !socketRef.current) return;
         // If game is over, don't allow interaction unless we want to allow viewing
         // But for now, disable moves if winner exists
         if (gameState.winner) return;
@@ -95,7 +108,7 @@ const GameRoom = () => {
 
         if (selection && selection.type === 'hand') {
             // Place piece
-            socket.emit('place_piece', {
+            socketRef.current.emit('place_piece', {
                 stackIndex: selection.stackIndex,
                 row,
                 col
@@ -107,7 +120,7 @@ const GameRoom = () => {
                 setSelection(null); // Deselect if clicking same cell
                 return;
             }
-            socket.emit('move_piece', {
+            socketRef.current.emit('move_piece', {
                 fromRow: selection.row,
                 fromCol: selection.col,
                 toRow: row,
@@ -128,7 +141,9 @@ const GameRoom = () => {
     };
 
     const handlePlayAgain = () => {
-        socket.emit('reset_game');
+        if (socketRef.current && socketRef.current.connected) {
+            socketRef.current.emit('reset_game');
+        }
     };
 
     if (!gameState) {
@@ -149,14 +164,6 @@ const GameRoom = () => {
     const isMyTurn = gameState.turn === playerId;
     const turnPlayer = gameState.players.find(p => p.id === gameState.turn);
     const turnColor = turnPlayer ? turnPlayer.color : '';
-
-    console.log('Turn Debug:', {
-        turnId: gameState.turn,
-        myId: playerId,
-        players: gameState.players,
-        turnPlayer,
-        turnColor
-    });
 
     const getDisplayColor = (c) => {
         if (!c) return '';
@@ -184,14 +191,36 @@ const GameRoom = () => {
         }
     };
 
+    // Get badge background color based on game state
+    const getStatusBadgeColor = () => {
+        if (gameState.state === 'waiting') {
+            return 'transparent';
+        }
+        if (gameState.winner) {
+            return gameState.winner; // Return the winner's color
+        }
+        return turnColor; // Return current turn player's color
+    };
+
     return (
         <div className="app-container">
-            <div className="page-header">
-                <img src="/goblet1.png" alt="Jerry the Goblin" className="header-icon" />
-                <h1>Jerry's Gobblet</h1>
-            </div>
+            {viewingBoard ? (
+                <div className="header-spacer"></div>
+            ) : (
+                <>
+                    <div className="page-header">
+                        <img src="/goblet1.png" alt="Jerry the Goblin" className="header-icon" />
+                        <h1>Jerry's Gobblet</h1>
+                    </div>
 
-            {!viewingBoard && <h3 className="game-status-message">{getStatusMessage()}</h3>}
+                    <div
+                        className="game-status-message"
+                        style={{ backgroundColor: getStatusBadgeColor() }}
+                    >
+                        {getStatusMessage()}
+                    </div>
+                </>
+            )}
 
             {/* Opponent Hand */}
             {gameState.state !== 'waiting' && (
@@ -209,6 +238,7 @@ const GameRoom = () => {
                 currentPlayer={playerColor}
                 turn={turnColor}
                 selectedCell={selection && selection.type === 'board' ? selection : null}
+                lastMove={lastMove}
             />
 
             {/* My Hand */}

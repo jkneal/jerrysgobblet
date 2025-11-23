@@ -18,6 +18,9 @@ class GobletGame {
             white: [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
             black: [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
         };
+
+        // Track last move for highlighting
+        this.lastMove = null; // { type: 'place'|'move', toRow, toCol, fromRow?, fromCol? }
     }
 
     addPlayer(playerId, preferredColor) {
@@ -109,6 +112,9 @@ class GobletGame {
             ];
         });
 
+        // Clear last move
+        this.lastMove = null;
+
         // If we have default colors but no players (shouldn't happen in active game reset),
         // we might want to keep defaults, but for now this is safer for active games.
     }
@@ -148,6 +154,9 @@ class GobletGame {
         // Execute move
         stack.pop(); // Remove from hand
         this.board[toRow][toCol].push({ color, size: pieceSize });
+
+        // Track last move
+        this.lastMove = { type: 'place', toRow, toCol };
 
         this.finishTurn();
         return true;
@@ -194,6 +203,9 @@ class GobletGame {
         // Execute move
         sourceStack.pop();
         this.board[toRow][toCol].push(piece);
+
+        // Track last move
+        this.lastMove = { type: 'move', fromRow, fromCol, toRow, toCol };
 
         this.finishTurn();
         return true;
@@ -288,7 +300,8 @@ class GobletGame {
             turn: this.turn,
             state: this.state,
             winner: this.winner,
-            playerHands: this.playerHands // Frontend needs to know available pieces
+            playerHands: this.playerHands, // Frontend needs to know available pieces
+            lastMove: this.lastMove // For highlighting opponent moves
         };
     }
 }

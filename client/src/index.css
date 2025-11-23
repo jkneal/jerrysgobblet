@@ -73,13 +73,20 @@ h1 {
 }
 
 /* Game status message */
+/* Game status message */
 .game-status-message {
-  color: var(--accent-color);
-  font-weight: 600;
+  color: #f0f0f0;
+  font-weight: 700;
   letter-spacing: 0.05em;
   font-size: 3.5vmin;
-  margin: 1vmin 0 2vmin 0;
+  margin: 1vmin auto 2vmin auto;
   text-align: center;
+  padding: 1.5vmin 3vmin;
+  border-radius: 50px;
+  display: inline-block;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .game-info {
@@ -171,12 +178,12 @@ h1 {
 }
 
 .board-cell.selected {
-  border-color: var(--accent-color);
+  border-color: #0050cc;
   box-shadow:
-    0 0 0 4px var(--accent-color),
-    0 0 30px rgba(0, 188, 212, 0.6),
-    0 0 60px rgba(0, 188, 212, 0.3),
-    inset 0 0 20px rgba(0, 188, 212, 0.2);
+    0 0 0 4px #0050cc,
+    0 0 30px rgba(0, 80, 204, 0.8),
+    0 0 60px rgba(0, 80, 204, 0.5),
+    inset 0 0 20px rgba(0, 80, 204, 0.4);
   transform: translateY(-4px) scale(1.05);
   animation: pulse-selection 1.5s ease-in-out infinite;
   z-index: 10;
@@ -185,6 +192,29 @@ h1 {
 .board-cell.valid-target {
   background: rgba(0, 188, 212, 0.1);
   box-shadow: inset 0 0 0 1px rgba(0, 188, 212, 0.3);
+}
+
+/* Last move highlighting */
+.board-cell.last-move {
+  animation: pulse-last-move 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-last-move {
+
+  0%,
+  100% {
+    background: rgba(255, 140, 0, 0.4);
+    box-shadow:
+      0 0 20px rgba(255, 140, 0, 0.5),
+      inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  50% {
+    background: rgba(255, 140, 0, 0.6);
+    box-shadow:
+      0 0 30px rgba(255, 140, 0, 0.8),
+      inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
 }
 
 /* Pieces (Goblets) */
@@ -227,7 +257,7 @@ h1 {
 /* Player Hand */
 .player-hand {
   margin: 1vmin 0;
-  padding: 1.5vmin;
+  padding: 1vmin 1.5vmin 0.5vmin 1.5vmin;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -247,9 +277,30 @@ h1 {
 
 /* Disabled state when it's not the player's turn */
 .player-hand.disabled {
-  opacity: 0.5;
-  filter: grayscale(0.5);
+  opacity: 0.3;
+  filter: grayscale(0.8) brightness(0.6);
   pointer-events: none;
+  position: relative;
+}
+
+.player-hand.disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.hand-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5vmin;
+  margin-bottom: 1vmin;
 }
 
 .player-hand.current-player h3 {
@@ -258,11 +309,23 @@ h1 {
 }
 
 .player-hand h3 {
-  margin: 0 0 1vmin 0;
+  margin: 0;
   font-size: 2vmin;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   opacity: 0.7;
+}
+
+.hand-turn-badge {
+  padding: 0.5em 1em;
+  border-radius: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 1.5vmin;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  color: #1a1a1a;
+  white-space: nowrap;
 }
 
 .hand-stacks {
@@ -280,12 +343,12 @@ h1 {
 }
 
 .hand-stack-container.selected .hand-stack-main {
-  border-color: var(--accent-color);
+  border-color: #0050cc;
   border-width: 4px;
   box-shadow:
-    0 0 30px rgba(0, 188, 212, 0.6),
-    0 0 60px rgba(0, 188, 212, 0.3),
-    inset 0 0 20px rgba(0, 188, 212, 0.2);
+    0 0 30px rgba(0, 80, 204, 0.8),
+    0 0 60px rgba(0, 80, 204, 0.5),
+    inset 0 0 20px rgba(0, 80, 204, 0.4);
   transform: translateY(-4px) scale(1.05);
   animation: pulse-selection 1.5s ease-in-out infinite;
 }
@@ -305,6 +368,63 @@ h1 {
       0 0 40px rgba(0, 188, 212, 0.8),
       0 0 80px rgba(0, 188, 212, 0.5),
       inset 0 0 30px rgba(0, 188, 212, 0.3);
+  }
+}
+
+/* Subtle goblin animations */
+@keyframes goblin-eye-look {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(-1.5px);
+  }
+}
+
+@keyframes goblin-subtle-wobble {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  33% {
+    transform: rotate(0.5deg);
+  }
+
+  66% {
+    transform: rotate(-0.5deg);
+  }
+}
+
+@keyframes goblin-feather-wiggle {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-15deg);
+  }
+
+  75% {
+    transform: rotate(15deg);
+  }
+}
+
+@keyframes goblin-arm-wave {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(-20deg);
   }
 }
 
@@ -342,10 +462,10 @@ h1 {
 .hand-stack-remaining {
   display: flex;
   gap: 2px;
-  padding: 6px;
+  padding: 3px 6px;
   background: transparent;
   border-radius: 6px;
-  min-height: 45px;
+  min-height: 35px;
   align-items: center;
   justify-content: center;
 }
@@ -429,7 +549,7 @@ h1 {
 }
 
 .win-subtitle {
-  font-size: 2.5vmin;
+  font-size: 2vmin;
   opacity: 0.9;
   margin-bottom: 4vmin;
 }
@@ -477,6 +597,13 @@ h1 {
 .action-btn:hover {
   transform: translateY(-2px);
   filter: brightness(1.1);
+}
+
+.header-spacer {
+  width: 100%;
+  height: 15vmin;
+  background: #000000;
+  position: relative;
 }
 
 .view-board-controls {
@@ -532,7 +659,7 @@ h1 {
 }
 
 .home-screen h1 {
-  font-size: 4rem;
+  font-size: 3rem;
 }
 
 .title-graphic {}
