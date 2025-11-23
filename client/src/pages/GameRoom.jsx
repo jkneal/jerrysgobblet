@@ -26,10 +26,12 @@ const GameRoom = () => {
     const [gameState, setGameState] = useState(null);
     const [playerId, setPlayerId] = useState(null);
     const [selection, setSelection] = useState(null);
+    const socketRef = useRef(null);
 
     useEffect(() => {
-        // Initialize socket
-        socket = io('http://localhost:3000', {
+        // Use environment variable for backend URL, fallback to localhost for development
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+        socket = io(backendUrl, {
             transports: ['websocket'],
         });
 
