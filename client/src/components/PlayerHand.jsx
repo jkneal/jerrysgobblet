@@ -39,8 +39,8 @@ const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPl
                                     key={pieceIndex}
                                     className="remaining-piece"
                                     style={{
-                                        width: `${28 + size * 3}px`,
-                                        height: `${28 + size * 3}px`,
+                                        width: `${20 + size * 2}px`,
+                                        height: `${20 + size * 2}px`,
                                     }}
                                 >
                                     <GoblinPiece color={color} size={size} />

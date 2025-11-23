@@ -32,7 +32,7 @@ body {
 .app-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2vmin;
+  padding: 1vmin;
   text-align: center;
   position: relative;
   display: flex;
@@ -77,7 +77,7 @@ h1 {
   color: var(--accent-color);
   font-weight: 600;
   letter-spacing: 0.05em;
-  font-size: 2.5vmin;
+  font-size: 3.5vmin;
   margin: 1vmin 0 2vmin 0;
   text-align: center;
 }
@@ -121,8 +121,8 @@ h1 {
   animation: gradient-grid 240s linear infinite;
   padding: 2vmin;
   border-radius: 16px;
-  width: 50vmin;
-  height: 50vmin;
+  width: 70vmin;
+  height: 70vmin;
   margin: 0.5vmin auto;
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.5),
@@ -231,7 +231,7 @@ h1 {
   background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  width: 50vmin;
+  width: 70vmin;
 }
 
 /* Current player's hand - white background */
@@ -312,15 +312,15 @@ h1 {
 .hand-stack-main {
   width: 10vmin;
   height: 10vmin;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 2px solid transparent;
+  position: relative;
 }
 
 /* Hand stack styling for current player's white background */
@@ -341,9 +341,9 @@ h1 {
 /* Panel showing remaining pieces */
 .hand-stack-remaining {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   padding: 6px;
-  background: rgba(0, 0, 0, 0.15);
+  background: transparent;
   border-radius: 6px;
   min-height: 45px;
   align-items: center;
@@ -352,8 +352,8 @@ h1 {
 
 /* Remaining pieces panel for current player's white background */
 .player-hand.current-player .hand-stack-remaining {
-  background: rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+  border: none;
 }
 
 .remaining-piece {
@@ -421,10 +421,11 @@ h1 {
 
 .win-title {
   font-size: 4rem;
-  margin: 0 0 1rem 0;
-  background: linear-gradient(to right, #ffd700, #ff8c00);
+  margin: 0.5rem 0;
+  background: linear-gradient(135deg, var(--primary-color), #ff8c00);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
 .win-subtitle {
@@ -530,6 +531,10 @@ h1 {
   min-height: 100vh;
 }
 
+.home-screen h1 {
+  font-size: 4rem;
+}
+
 .title-graphic {}
 
 .goblet-icon {
@@ -553,14 +558,14 @@ h1 {
 }
 
 .subtitle {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   color: #aaa;
   margin-bottom: 1rem;
   letter-spacing: 0.1em;
 }
 
 .challenge-text {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   color: var(--primary-color);
   font-style: italic;
   animation: pulse 2s infinite;
