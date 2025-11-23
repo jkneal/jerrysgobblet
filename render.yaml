@@ -14,12 +14,10 @@ services:
   - type: web
     name: jerrysgobblet
     env: static
-    region: ohio  # Should match backend region for best performance
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: ./client/dist
     envVars:
       - key: VITE_BACKEND_URL
-        sync: false
         value: https://gobblet-backend.onrender.com
     routes:
       - type: rewrite
