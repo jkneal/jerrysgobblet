@@ -7,12 +7,11 @@ const Home = () => {
     return (
         <div className="app-container home-screen">
             <div className="title-graphic">
-                {/* Placeholder for graphic */}
-                <div className="goblet-icon">🏆</div>
+                <img src="/goblet1.png" alt="Jerry the Goblin" className="goblet-icon" />
             </div>
-            <h1>Jerry's Goblet</h1>
-            <p className="subtitle">The Ultimate Strategy Game</p>
-            <p className="challenge-text">Think you have what it takes to beat Jerry? 🤔😈</p>
+            <h1>Jerry's Gobblet</h1>
+            <p className="challenge-text">Think you have what it takes to beat Jerry? 🤔</p>
+            <div className="subtitle">The Ultimate Strategy Game</div>
 
             <div className="menu-buttons">
                 <button className="menu-btn primary" onClick={() => navigate('/lobby')}>Play Now</button>

@@ -54,6 +54,21 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('reset_game', () => {
+        const game = gameManager.getGameByPlayerId(socket.id);
+        if (game) {
+            console.log(`Player ${socket.id} requested game reset`);
+            game.reset();
+            // Ensure state is playing if we have 2 players, or waiting if 1
+            if (game.players.length === 2) {
+                game.state = 'playing';
+            } else {
+                game.state = 'waiting';
+            }
+            io.to(game.id).emit('game_update', game.getGameState());
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         // Handle player disconnection logic here if needed

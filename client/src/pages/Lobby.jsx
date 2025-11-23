@@ -23,7 +23,10 @@ const Lobby = () => {
 
     return (
         <div className="app-container lobby-screen">
-            <h1>Choose Your Color</h1>
+            <div className="page-header">
+                <img src="/goblet1.png" alt="Jerry the Goblin" className="header-icon" />
+                <h1>Choose Your Color</h1>
+            </div>
 
             <div className="color-grid">
                 {COLORS.map(color => (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import GameBoard from '../components/GameBoard';
@@ -26,6 +26,7 @@ const GameRoom = () => {
     const [gameState, setGameState] = useState(null);
     const [playerId, setPlayerId] = useState(null);
     const [selection, setSelection] = useState(null);
+    const [viewingBoard, setViewingBoard] = useState(false);
     const socketRef = useRef(null);
 
     useEffect(() => {
@@ -63,13 +64,21 @@ const GameRoom = () => {
         };
     }, [color]);
 
-    const handleHandPieceClick = (stackIndex) => {
-        if (!gameState) return;
+    useEffect(() => {
+        // Reset viewing board state when game restarts
+        if (gameState && (gameState.state === 'playing' || gameState.state === 'waiting')) {
+            setViewingBoard(false);
+        }
+    }, [gameState?.state]);
 
+    const handleHandPieceClick = (stackIndex) => {
+        if (!gameState || gameState.winner) return;
+        const playerColor = gameState.players.find(p => p.id === playerId)?.color;
         if (gameState.turn !== playerId) return;
 
+        // Select piece from hand
         if (selection && selection.type === 'hand' && selection.stackIndex === stackIndex) {
-            setSelection(null);
+            setSelection(null); // Deselect if already selected
         } else {
             setSelection({ type: 'hand', stackIndex });
         }
@@ -77,26 +86,49 @@ const GameRoom = () => {
 
     const handleBoardCellClick = (row, col) => {
         if (!gameState) return;
+        // If game is over, don't allow interaction unless we want to allow viewing
+        // But for now, disable moves if winner exists
+        if (gameState.winner) return;
+
         const playerColor = gameState.players.find(p => p.id === playerId)?.color;
         if (gameState.turn !== playerId) return;
 
-        if (!selection) {
-            const stack = gameState.board[row][col];
-            if (stack.length > 0 && stack[stack.length - 1].color === playerColor) {
-                setSelection({ type: 'board', row, col });
-            }
-            return;
-        }
-
-        if (selection.type === 'hand') {
-            socket.emit('place_piece', { stackIndex: selection.stackIndex, row, col });
-        } else if (selection.type === 'board') {
+        if (selection && selection.type === 'hand') {
+            // Place piece
+            socket.emit('place_piece', {
+                stackIndex: selection.stackIndex,
+                row,
+                col
+            });
+            setSelection(null);
+        } else if (selection && selection.type === 'board') {
+            // Move piece
             if (selection.row === row && selection.col === col) {
-                setSelection(null);
+                setSelection(null); // Deselect if clicking same cell
                 return;
             }
-            socket.emit('move_piece', { fromRow: selection.row, fromCol: selection.col, toRow: row, toCol: col });
+            socket.emit('move_piece', {
+                fromRow: selection.row,
+                fromCol: selection.col,
+                toRow: row,
+                toCol: col
+            });
+            setSelection(null);
+        } else {
+            // Select piece on board to move
+            // Validate: must be my piece
+            const stack = gameState.board[row][col];
+            if (stack.length > 0) {
+                const topPiece = stack[stack.length - 1];
+                if (topPiece.color === playerColor) {
+                    setSelection({ type: 'board', row, col });
+                }
+            }
         }
+    };
+
+    const handlePlayAgain = () => {
+        socket.emit('reset_game');
     };
 
     if (!gameState) {
@@ -133,18 +165,33 @@ const GameRoom = () => {
         return c.charAt(0).toUpperCase() + c.slice(1);
     };
 
+    // Generate status message
+    const getStatusMessage = () => {
+        if (gameState.state === 'waiting') {
+            return 'Waiting for opponent to join...';
+        }
+        if (gameState.winner) {
+            if (gameState.winner === playerColor) {
+                return 'You win!';
+            } else {
+                return `${getDisplayColor(gameState.winner)} wins!`;
+            }
+        }
+        if (isMyTurn) {
+            return 'Your turn';
+        } else {
+            return `${getDisplayColor(turnColor)}'s turn`;
+        }
+    };
+
     return (
         <div className="app-container">
-            <h1>Jerry's Goblet</h1>
-            {gameState.state === 'waiting' && <h3 className="waiting-message">Waiting for opponent to join...</h3>}
-
-            <div className="game-info">
-                <p>You are: <span className={`player-badge ${playerColor}`} style={{ background: playerColor }}>{getDisplayColor(playerColor)}</span></p>
-                {gameState.state !== 'waiting' && (
-                    <p>Turn: <span className={`player-badge ${turnColor}`} style={{ background: turnColor }}>{getDisplayColor(turnColor)}</span></p>
-                )}
-                <p>Status: {gameState.state}</p>
+            <div className="page-header">
+                <img src="/goblet1.png" alt="Jerry the Goblin" className="header-icon" />
+                <h1>Jerry's Gobblet</h1>
             </div>
+
+            {!viewingBoard && <h3 className="game-status-message">{getStatusMessage()}</h3>}
 
             {/* Opponent Hand */}
             {gameState.state !== 'waiting' && (
@@ -170,17 +217,41 @@ const GameRoom = () => {
                 color={playerColor}
                 onPieceClick={handleHandPieceClick}
                 selectedStackIndex={selection && selection.type === 'hand' ? selection.stackIndex : null}
-                isCurrentPlayer={isMyTurn}
+                isCurrentPlayer={true}
+                isMyTurn={isMyTurn}
             />
 
-            {gameState.winner && (
+            {/* Win Overlay */}
+            {gameState.winner && !viewingBoard && (
                 <div className="win-overlay">
                     <div className="win-content">
                         <h2 className="win-title">{gameState.winner === playerColor ? 'VICTORY!' : 'DEFEAT'}</h2>
                         <p className="win-subtitle">
                             {gameState.winner === playerColor ? 'You gobbled your way to glory!' : 'Better luck next time.'}
                         </p>
-                        <button className="play-again" onClick={() => navigate('/')}>Back to Home</button>
+                        <div className="game-over-actions">
+                            <button className="action-btn view-board" onClick={() => setViewingBoard(true)}>
+                                View Board
+                            </button>
+                            <button className="action-btn play-again" onClick={handlePlayAgain}>
+                                Play Again
+                            </button>
+                            <button className="action-btn return-home" onClick={() => navigate('/')}>
+                                Return Home
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Back to Menu button when viewing board in finished state */}
+            {gameState.winner && viewingBoard && (
+                <div className="view-board-controls">
+                    <button className="action-btn return-home small" onClick={() => setViewingBoard(false)}>
+                        Show Menu
+                    </button>
+                    <div className="game-status-message">
+                        {gameState.winner === playerColor ? 'You won!' : `${gameState.winner} won!`}
                     </div>
                 </div>
             )}

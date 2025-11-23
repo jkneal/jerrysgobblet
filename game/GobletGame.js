@@ -90,12 +90,27 @@ class GobletGame {
 
     reset() {
         this.board = Array(4).fill(null).map(() => Array(4).fill(null).map(() => []));
-        this.turn = 'white';
         this.winner = null;
-        this.playerHands = {
-            white: [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
-            black: [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
-        };
+
+        // Reset turn to first player if exists
+        if (this.players.length > 0) {
+            this.turn = this.players[0].id;
+        } else {
+            this.turn = null;
+        }
+
+        // Reset hands for current players
+        this.playerHands = {};
+        this.players.forEach(p => {
+            this.playerHands[p.color] = [
+                [1, 2, 3, 4],
+                [1, 2, 3, 4],
+                [1, 2, 3, 4]
+            ];
+        });
+
+        // If we have default colors but no players (shouldn't happen in active game reset),
+        // we might want to keep defaults, but for now this is safer for active games.
     }
 
     getPlayerColor(playerId) {

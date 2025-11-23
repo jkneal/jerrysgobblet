@@ -43,6 +43,23 @@ body {
   gap: 2vmin;
 }
 
+
+/* Page header with icon */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-icon {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+}
+
 h1 {
   font-weight: 800;
   letter-spacing: -0.05em;
@@ -53,6 +70,16 @@ h1 {
   font-size: 4vmin;
   /* Reduced from 5vmin */
   text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Game status message */
+.game-status-message {
+  color: var(--accent-color);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-size: 2.5vmin;
+  margin: 1vmin 0 2vmin 0;
+  text-align: center;
 }
 
 .game-info {
@@ -89,18 +116,31 @@ h1 {
   display: grid;
   grid-template-rows: repeat(4, 1fr);
   gap: 1.5vmin;
-  background: #1e1e1e;
+  background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000);
+  background-size: 400% 400%;
+  animation: gradient-grid 240s linear infinite;
   padding: 2vmin;
   border-radius: 16px;
-  width: 40vmin;
-  /* Reduced from 45vmin */
-  height: 40vmin;
-  /* Reduced from 45vmin */
+  width: 50vmin;
+  height: 50vmin;
   margin: 0.5vmin auto;
-  /* Reduced margin */
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.5),
     inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+@keyframes gradient-grid {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .board-row {
@@ -121,13 +161,25 @@ h1 {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.board-cell:hover {
+.board-cell:not(.opponent-piece):hover {
   background: var(--cell-hover);
   transform: translateY(-1px);
 }
 
+.board-cell.opponent-piece {
+  cursor: default;
+}
+
 .board-cell.selected {
-  box-shadow: 0 0 0 2px var(--accent-color), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  border-color: var(--accent-color);
+  box-shadow:
+    0 0 0 4px var(--accent-color),
+    0 0 30px rgba(0, 188, 212, 0.6),
+    0 0 60px rgba(0, 188, 212, 0.3),
+    inset 0 0 20px rgba(0, 188, 212, 0.2);
+  transform: translateY(-4px) scale(1.05);
+  animation: pulse-selection 1.5s ease-in-out infinite;
+  z-index: 10;
 }
 
 .board-cell.valid-target {
@@ -137,32 +189,14 @@ h1 {
 
 /* Pieces (Goblets) */
 .piece {
-  border-radius: 50%;
   position: absolute;
+  top: 58%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* 3D Effect for pieces */
-.piece::after {
-  content: '';
-  position: absolute;
-  top: 15%;
-  left: 15%;
-  width: 70%;
-  height: 70%;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%);
-}
-
-.piece::before {
-  content: '';
-  position: absolute;
-  top: 5%;
-  left: 5%;
-  width: 90%;
-  height: 90%;
-  border-radius: 50%;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Sizes */
@@ -197,7 +231,30 @@ h1 {
   background: rgba(255, 255, 255, 0.03);
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  width: fit-content;
+  width: 50vmin;
+}
+
+/* Current player's hand - white background */
+.player-hand.current-player {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Opponent's hand - no interaction */
+.player-hand:not(.current-player) {
+  pointer-events: none;
+}
+
+/* Disabled state when it's not the player's turn */
+.player-hand.disabled {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+  pointer-events: none;
+}
+
+.player-hand.current-player h3 {
+  color: #333;
+  opacity: 1;
 }
 
 .player-hand h3 {
@@ -214,7 +271,45 @@ h1 {
   gap: 2vmin;
 }
 
-.hand-stack {
+/* Hand stack container - holds main piece and remaining pieces panel */
+.hand-stack-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5vmin;
+}
+
+.hand-stack-container.selected .hand-stack-main {
+  border-color: var(--accent-color);
+  border-width: 4px;
+  box-shadow:
+    0 0 30px rgba(0, 188, 212, 0.6),
+    0 0 60px rgba(0, 188, 212, 0.3),
+    inset 0 0 20px rgba(0, 188, 212, 0.2);
+  transform: translateY(-4px) scale(1.05);
+  animation: pulse-selection 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-selection {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 30px rgba(0, 188, 212, 0.6),
+      0 0 60px rgba(0, 188, 212, 0.3),
+      inset 0 0 20px rgba(0, 188, 212, 0.2);
+  }
+
+  50% {
+    box-shadow:
+      0 0 40px rgba(0, 188, 212, 0.8),
+      0 0 80px rgba(0, 188, 212, 0.5),
+      inset 0 0 30px rgba(0, 188, 212, 0.3);
+  }
+}
+
+/* Main piece display area */
+.hand-stack-main {
   width: 10vmin;
   height: 10vmin;
   background: rgba(0, 0, 0, 0.2);
@@ -228,25 +323,44 @@ h1 {
   border: 2px solid transparent;
 }
 
-.hand-stack:hover {
+/* Hand stack styling for current player's white background */
+.player-hand.current-player .hand-stack-main {
+  background: rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.player-hand.current-player .hand-stack-main:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.hand-stack-main:hover {
   background: rgba(255, 255, 255, 0.05);
   transform: translateY(-2px);
 }
 
-.hand-stack.selected {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+/* Panel showing remaining pieces */
+.hand-stack-remaining {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  min-height: 45px;
+  align-items: center;
+  justify-content: center;
 }
 
-.stack-count {
-  position: absolute;
-  bottom: -25px;
-  font-size: 0.8em;
-  font-weight: bold;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(0, 0, 0, 0.3);
-  padding: 2px 8px;
-  border-radius: 10px;
+/* Remaining pieces panel for current player's white background */
+.player-hand.current-player .hand-stack-remaining {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.remaining-piece {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
 }
 
 .empty-stack-placeholder {
@@ -314,27 +428,75 @@ h1 {
 }
 
 .win-subtitle {
-  font-size: 1.5rem;
-  color: #aaa;
-  margin-bottom: 2rem;
+  font-size: 2.5vmin;
+  opacity: 0.9;
+  margin-bottom: 4vmin;
 }
 
-button.play-again {
-  background: linear-gradient(135deg, var(--accent-color), #008ba3);
-  color: white;
+.game-over-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2vmin;
+  width: 100%;
+  max-width: 30vmin;
+  margin: 0 auto;
+}
+
+.action-btn {
+  padding: 1.5vmin 3vmin;
+  font-size: 2vmin;
   border: none;
-  padding: 1rem 2rem;
-  font-size: 1.2rem;
   border-radius: 50px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
   font-weight: bold;
-  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
-button.play-again:hover {
+.action-btn.play-again {
+  background: var(--accent-color);
+  color: #1a1a2e;
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+}
+
+.action-btn.view-board {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.action-btn.return-home {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.8vmin;
+}
+
+.action-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0, 188, 212, 0.3);
+  filter: brightness(1.1);
+}
+
+.view-board-controls {
+  position: absolute;
+  top: 2vmin;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vmin;
+}
+
+.action-btn.small {
+  padding: 1vmin 2vmin;
+  font-size: 1.5vmin;
+  width: auto;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  backdrop-filter: blur(5px);
 }
 
 @keyframes fadeIn {
@@ -368,12 +530,12 @@ button.play-again:hover {
   min-height: 100vh;
 }
 
-.title-graphic {
-  margin-bottom: 2rem;
-}
+.title-graphic {}
 
 .goblet-icon {
-  font-size: 8rem;
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
   filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
   animation: float 3s ease-in-out infinite;
 }
@@ -400,7 +562,6 @@ button.play-again:hover {
 .challenge-text {
   font-size: 1.2rem;
   color: var(--primary-color);
-  margin-bottom: 3rem;
   font-style: italic;
   animation: pulse 2s infinite;
 }
@@ -497,42 +658,7 @@ button.play-again:hover {
 
 /* ... existing styles ... */
 
-/* Dynamic Piece Colors */
-.piece-gold {
-  background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
-}
-
-.piece-silver {
-  background: radial-gradient(circle at 30% 30%, #c0c0c0, #696969);
-}
-
-.piece-red {
-  background: radial-gradient(circle at 30% 30%, #e91e63, #880e4f);
-}
-
-.piece-blue {
-  background: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1);
-}
-
-.piece-green {
-  background: radial-gradient(circle at 30% 30%, #4caf50, #1b5e20);
-}
-
-.piece-purple {
-  background: radial-gradient(circle at 30% 30%, #9c27b0, #4a148c);
-}
-
-.piece-orange {
-  background: radial-gradient(circle at 30% 30%, #ff9800, #e65100);
-}
-
-.piece-teal {
-  background: radial-gradient(circle at 30% 30%, #00bcd4, #006064);
-}
-
-.piece-pink {
-  background: radial-gradient(circle at 30% 30%, #ff4081, #c51162);
-}
+/* Dynamic Piece Colors - now handled by SVG, keeping classes for compatibility */
 
 .color-option {
   aspect-ratio: 1.6;
@@ -611,32 +737,4 @@ button.play-again:hover {
   color: #fff;
 }
 
-/* Dynamic Piece Colors */
-.piece-gold {
-  background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
-}
-
-.piece-silver {
-  background: radial-gradient(circle at 30% 30%, #c0c0c0, #696969);
-}
-
-.piece-red {
-  background: radial-gradient(circle at 30% 30%, #e91e63, #880e4f);
-}
-
-.piece-blue {
-  background: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1);
-}
-
-.piece-green {
-  background: radial-gradient(circle at 30% 30%, #4caf50, #1b5e20);
-}
-
-.piece-purple {
-  background: radial-gradient(circle at 30% 30%, #9c27b0, #4a148c);
-}
-
-/* Common shadow for all pieces */
-.piece {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4), inset 0 -2px 5px rgba(0, 0, 0, 0.2);
-}
+/* Piece styling handled by SVG component */
