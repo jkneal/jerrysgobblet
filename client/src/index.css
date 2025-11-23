@@ -1,0 +1,642 @@
+:root {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --board-bg: #2c2c2c;
+  --cell-bg: #1a1a1a;
+  --cell-hover: #252525;
+  --primary-color: #ffd700;
+  /* Gold accent */
+  --accent-color: #00bcd4;
+  /* Cyan accent */
+
+  /* Piece Colors */
+  --p1-base: #ffd700;
+  /* Gold */
+  --p1-shadow: #b8860b;
+  --p2-base: #c0c0c0;
+  /* Silver */
+  --p2-shadow: #696969;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+  color: var(--text-color);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.app-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2vmin;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 2vmin;
+}
+
+h1 {
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  background: linear-gradient(to right, var(--p1-base), var(--p2-base));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5em;
+  font-size: 4vmin;
+  /* Reduced from 5vmin */
+  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.game-info {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1vmin;
+  /* Reduced padding */
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  margin-bottom: 1vmin;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+  gap: 3vmin;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.player-badge {
+  padding: 0.5em 1em;
+  border-radius: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 1.8vmin;
+  /* Reduced from 2vmin */
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+
+/* ... (colors) ... */
+
+/* Game Board */
+.game-board {
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 1.5vmin;
+  background: #1e1e1e;
+  padding: 2vmin;
+  border-radius: 16px;
+  width: 40vmin;
+  /* Reduced from 45vmin */
+  height: 40vmin;
+  /* Reduced from 45vmin */
+  margin: 0.5vmin auto;
+  /* Reduced margin */
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5vmin;
+}
+
+.board-cell {
+  background: var(--cell-bg);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.board-cell:hover {
+  background: var(--cell-hover);
+  transform: translateY(-1px);
+}
+
+.board-cell.selected {
+  box-shadow: 0 0 0 2px var(--accent-color), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.board-cell.valid-target {
+  background: rgba(0, 188, 212, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(0, 188, 212, 0.3);
+}
+
+/* Pieces (Goblets) */
+.piece {
+  border-radius: 50%;
+  position: absolute;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 3D Effect for pieces */
+.piece::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  left: 15%;
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+.piece::before {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Sizes */
+.piece-size-1 {
+  width: 35%;
+  height: 35%;
+  z-index: 1;
+}
+
+.piece-size-2 {
+  width: 55%;
+  height: 55%;
+  z-index: 2;
+}
+
+.piece-size-3 {
+  width: 75%;
+  height: 75%;
+  z-index: 3;
+}
+
+.piece-size-4 {
+  width: 90%;
+  height: 90%;
+  z-index: 4;
+}
+
+/* Player Hand */
+.player-hand {
+  margin: 1vmin 0;
+  padding: 1.5vmin;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: fit-content;
+}
+
+.player-hand h3 {
+  margin: 0 0 1vmin 0;
+  font-size: 2vmin;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+.hand-stacks {
+  display: flex;
+  justify-content: center;
+  gap: 2vmin;
+}
+
+.hand-stack {
+  width: 10vmin;
+  height: 10vmin;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.hand-stack:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.hand-stack.selected {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+}
+
+.stack-count {
+  position: absolute;
+  bottom: -25px;
+  font-size: 0.8em;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.empty-stack-placeholder {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Waiting Message */
+.waiting-message {
+  color: var(--accent-color);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Win Overlay */
+.win-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.5s ease;
+}
+
+.win-content {
+  background: #1e1e1e;
+  padding: 3rem;
+  border-radius: 24px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.win-title {
+  font-size: 4rem;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(to right, #ffd700, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.win-subtitle {
+  font-size: 1.5rem;
+  color: #aaa;
+  margin-bottom: 2rem;
+}
+
+button.play-again {
+  background: linear-gradient(135deg, var(--accent-color), #008ba3);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+button.play-again:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 188, 212, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Home Screen */
+.home-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.title-graphic {
+  margin-bottom: 2rem;
+}
+
+.goblet-icon {
+  font-size: 8rem;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  color: #aaa;
+  margin-bottom: 1rem;
+  letter-spacing: 0.1em;
+}
+
+.challenge-text {
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  margin-bottom: 3rem;
+  font-style: italic;
+  animation: pulse 2s infinite;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+.menu-btn {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.menu-btn.primary {
+  background: linear-gradient(135deg, var(--primary-color), #ff8c00);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.menu-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+/* How to Play */
+.how-to-play {
+  text-align: left;
+  max-width: 800px;
+}
+
+.rules-content {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: 16px;
+  margin: 2rem 0;
+  line-height: 1.6;
+}
+
+.rules-content h2 {
+  color: var(--primary-color);
+  margin-top: 0;
+}
+
+.rules-content section {
+  margin-bottom: 2rem;
+}
+
+.graphic-placeholder {
+  background: rgba(0, 0, 0, 0.3);
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  color: #666;
+}
+
+/* Lobby / Color Picker */
+.lobby-screen h1 {
+  margin-bottom: 3rem;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2vmin;
+  row-gap: 6vmin;
+  /* Increased gap for names */
+  margin-bottom: 3rem;
+  width: 90%;
+  max-width: 1000px;
+  /* Allow it to be wider on PC */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ... existing styles ... */
+
+/* Dynamic Piece Colors */
+.piece-gold {
+  background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+}
+
+.piece-silver {
+  background: radial-gradient(circle at 30% 30%, #c0c0c0, #696969);
+}
+
+.piece-red {
+  background: radial-gradient(circle at 30% 30%, #e91e63, #880e4f);
+}
+
+.piece-blue {
+  background: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1);
+}
+
+.piece-green {
+  background: radial-gradient(circle at 30% 30%, #4caf50, #1b5e20);
+}
+
+.piece-purple {
+  background: radial-gradient(circle at 30% 30%, #9c27b0, #4a148c);
+}
+
+.piece-orange {
+  background: radial-gradient(circle at 30% 30%, #ff9800, #e65100);
+}
+
+.piece-teal {
+  background: radial-gradient(circle at 30% 30%, #00bcd4, #006064);
+}
+
+.piece-pink {
+  background: radial-gradient(circle at 30% 30%, #ff4081, #c51162);
+}
+
+.color-option {
+  aspect-ratio: 1.6;
+  /* Make them wider rectangles */
+  width: 100%;
+  border-radius: 16px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+
+
+.color-option:hover {
+  transform: scale(1.05);
+  z-index: 1;
+}
+
+.color-option.selected {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px #fff, 0 10px 20px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+.check-mark {
+  font-size: 3vmin;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.color-name {
+  position: absolute;
+  bottom: -4vmin;
+  /* Adjusted for responsive sizing */
+  font-size: 1.5vmin;
+  font-weight: bold;
+  color: #aaa;
+  width: 100%;
+  text-align: center;
+}
+
+.join-btn {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  font-size: 1.5rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.join-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: underline;
+  margin-top: 1rem;
+}
+
+.back-btn:hover {
+  color: #fff;
+}
+
+/* Dynamic Piece Colors */
+.piece-gold {
+  background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+}
+
+.piece-silver {
+  background: radial-gradient(circle at 30% 30%, #c0c0c0, #696969);
+}
+
+.piece-red {
+  background: radial-gradient(circle at 30% 30%, #e91e63, #880e4f);
+}
+
+.piece-blue {
+  background: radial-gradient(circle at 30% 30%, #2196f3, #0d47a1);
+}
+
+.piece-green {
+  background: radial-gradient(circle at 30% 30%, #4caf50, #1b5e20);
+}
+
+.piece-purple {
+  background: radial-gradient(circle at 30% 30%, #9c27b0, #4a148c);
+}
+
+/* Common shadow for all pieces */
+.piece {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4), inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
