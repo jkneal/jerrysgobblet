@@ -24,7 +24,9 @@ const Lobby = () => {
     const [selectedColor, setSelectedColor] = useState(COLORS[0]);
 
     const handleJoin = () => {
-        navigate('/play', { state: { color: selectedColor.id } });
+        // Pass the hex value so GoblinPiece can render any color correctly
+        // (e.g. 'bronze' is not a valid CSS color, but the hex is)
+        navigate('/play', { state: { color: selectedColor.hex } });
     };
 
     return (
