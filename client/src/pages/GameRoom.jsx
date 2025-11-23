@@ -165,10 +165,30 @@ const GameRoom = () => {
     const turnPlayer = gameState.players.find(p => p.id === gameState.turn);
     const turnColor = turnPlayer ? turnPlayer.color : '';
 
+    const COLOR_NAMES = {
+        '#ffd700': 'Gold',
+        '#c0c0c0': 'Silver',
+        '#e91e63': 'Ruby',
+        '#2196f3': 'Sapphire',
+        '#4caf50': 'Emerald',
+        '#9c27b0': 'Amethyst',
+        '#ff9800': 'Amber',
+        '#00bcd4': 'Turquoise',
+        '#ff4081': 'Rose',
+        '#3f51b5': 'Indigo',
+        '#cddc39': 'Lime',
+        '#00e5ff': 'Cyan',
+        '#795548': 'Bronze',
+        '#607d8b': 'Slate',
+        '#dc143c': 'Crimson'
+    };
+
     const getDisplayColor = (c) => {
         if (!c) return '';
-        // Map internal colors to display names if needed, or just capitalize
-        // If we support custom colors, we might just use them directly
+        // Check if it's a known hex code
+        const name = COLOR_NAMES[c.toLowerCase()];
+        if (name) return name;
+        // Fallback for named colors or unknown hexes
         return c.charAt(0).toUpperCase() + c.slice(1);
     };
 

@@ -1,8 +1,35 @@
 import React from 'react';
 import GoblinPiece from './GoblinPiece';
 
+const COLOR_NAMES = {
+    '#ffd700': 'Gold',
+    '#c0c0c0': 'Silver',
+    '#e91e63': 'Ruby',
+    '#2196f3': 'Sapphire',
+    '#4caf50': 'Emerald',
+    '#9c27b0': 'Amethyst',
+    '#ff9800': 'Amber',
+    '#00bcd4': 'Turquoise',
+    '#ff4081': 'Rose',
+    '#3f51b5': 'Indigo',
+    '#cddc39': 'Lime',
+    '#00e5ff': 'Cyan',
+    '#795548': 'Bronze',
+    '#607d8b': 'Slate',
+    '#dc143c': 'Crimson'
+};
+
 const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPlayer, isMyTurn = true }) => {
-    const displayColor = color ? color.charAt(0).toUpperCase() + color.slice(1) : '';
+    const getColorName = (hex) => {
+        if (!hex) return '';
+        // Check if it's a known hex code
+        const name = COLOR_NAMES[hex.toLowerCase()];
+        if (name) return name;
+        // Fallback for named colors or unknown hexes
+        return hex.charAt(0).toUpperCase() + hex.slice(1);
+    };
+
+    const displayColor = getColorName(color);
     const handTitle = isCurrentPlayer ? 'Your Hand' : `${displayColor}'s Hand`;
     const isDisabled = isCurrentPlayer && !isMyTurn;
 
