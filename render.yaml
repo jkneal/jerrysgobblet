@@ -3,6 +3,7 @@ services:
   - type: web
     name: gobblet-backend
     env: node
+    region: ohio  # Options: oregon, ohio, frankfurt, singapore
     buildCommand: npm install
     startCommand: node server.js
     envVars:
@@ -13,6 +14,7 @@ services:
   - type: web
     name: jerrysgobblet
     env: static
+    region: ohio  # Should match backend region for best performance
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: ./client/dist
     envVars:
