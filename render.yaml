@@ -17,10 +17,8 @@ services:
     staticPublishPath: ./client/dist
     envVars:
       - key: VITE_BACKEND_URL
-        fromService:
-          type: web
-          name: gobblet-backend
-          property: host
+        sync: false
+        value: https://gobblet-backend.onrender.com
     routes:
       - type: rewrite
         source: /*

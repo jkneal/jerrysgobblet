@@ -1,4 +1,4 @@
-#!/bin/bash
+cd c#!/bin/bash
 # Start backend
 echo "Starting Backend..."
 node server.js &

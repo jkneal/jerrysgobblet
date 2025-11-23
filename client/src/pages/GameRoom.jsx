@@ -134,7 +134,7 @@ const GameRoom = () => {
     if (!gameState) {
         return (
             <div className="app-container">
-                <h1>Jerry's Goblet</h1>
+                <h1>Jerry's Gobblet</h1>
                 <h3 className="waiting-message">Connecting to game...</h3>
             </div>
         );

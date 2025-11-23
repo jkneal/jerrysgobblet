@@ -1,4 +1,4 @@
-# Deployment Guide for Jerry's Goblet
+# Deployment Guide for Jerry's Gobblet
 
 ## Deploy to Render.com
 

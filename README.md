@@ -1,4 +1,4 @@
-# Jerry's Goblet
+# Jerry's Gobblet
 
 A 2-player strategy game based on Gobblet.
 
