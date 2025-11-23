@@ -9,7 +9,7 @@ const Home = () => {
             <div className="title-graphic">
                 <img src="/goblet1.png" alt="Jerry the Goblin" className="goblet-icon" />
             </div>
-            <h1>Jerry's Gobblet</h1>
+            <h1 style={{ "marginTop": "-.5rem" }}>Jerry's Gobblet</h1>
             <div className="challenge-text">Think you have what it takes to beat Jerry? 🤔</div>
             <div className="subtitle">The Ultimate Strategy Game</div>
 

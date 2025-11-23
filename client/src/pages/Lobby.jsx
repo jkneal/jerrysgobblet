@@ -11,6 +11,12 @@ const COLORS = [
     { id: 'orange', name: 'Amber', hex: '#ff9800' },
     { id: 'teal', name: 'Turquoise', hex: '#00bcd4' },
     { id: 'pink', name: 'Rose', hex: '#ff4081' },
+    { id: 'indigo', name: 'Indigo', hex: '#3f51b5' },
+    { id: 'lime', name: 'Lime', hex: '#cddc39' },
+    { id: 'cyan', name: 'Cyan', hex: '#00e5ff' },
+    { id: 'brown', name: 'Bronze', hex: '#795548' },
+    { id: 'slate', name: 'Slate', hex: '#607d8b' },
+    { id: 'crimson', name: 'Crimson', hex: '#dc143c' },
 ];
 
 const Lobby = () => {

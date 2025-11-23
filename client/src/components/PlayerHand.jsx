@@ -9,15 +9,7 @@ const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPl
     return (
         <div className={`player-hand ${color} ${isCurrentPlayer ? 'current-player' : ''} ${isDisabled ? 'disabled' : ''}`}>
             <div className="hand-header">
-                {isCurrentPlayer ? (
-                    isMyTurn && (
-                        <div className="hand-turn-badge" style={{ backgroundColor: color }}>
-                            Your Turn
-                        </div>
-                    )
-                ) : (
-                    <h3>{handTitle}</h3>
-                )}
+                <h3>{handTitle}</h3>
             </div>
             <div className="hand-stacks">
                 {hand.map((stack, index) => (
