@@ -1,7 +1,7 @@
 services:
   # Backend Node.js server with Socket.IO
   - type: web
-    name: goblet-backend
+    name: gobblet-backend
     env: node
     buildCommand: npm install
     startCommand: node server.js
@@ -11,7 +11,7 @@ services:
 
   # Frontend React app
   - type: web
-    name: goblet-frontend
+    name: jerrysgobblet
     env: static
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: ./client/dist
@@ -19,7 +19,7 @@ services:
       - key: VITE_BACKEND_URL
         fromService:
           type: web
-          name: goblet-backend
+          name: gobblet-backend
           property: host
     routes:
       - type: rewrite
