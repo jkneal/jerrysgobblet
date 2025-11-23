@@ -3,7 +3,6 @@ services:
   - type: web
     name: gobblet-backend
     env: node
-    region: ohio  # Options: oregon, ohio, frankfurt, singapore
     buildCommand: npm install
     startCommand: node server.js
     envVars:
