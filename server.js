@@ -34,9 +34,7 @@ const sessionMiddleware = session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     }
 });
 
@@ -44,8 +42,13 @@ app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Static files
-app.use(express.static('public'));
+// Static files - serve built frontend in production
+if (process.env.NODE_ENV === 'production') {
+    const path = require('path');
+    app.use(express.static(path.join(__dirname, 'client/dist')));
+} else {
+    app.use(express.static('public'));
+}
 
 // ===== AUTH ROUTES =====
 
@@ -400,6 +403,14 @@ io.on('connection', (socket) => {
         }
     });
 });
+
+// Catch-all route for client-side routing (must be last)
+if (process.env.NODE_ENV === 'production') {
+    const path = require('path');
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+    });
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

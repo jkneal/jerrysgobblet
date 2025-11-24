@@ -1,9 +1,11 @@
 services:
-  # Backend Node.js server with Socket.IO
+  # Combined Backend + Frontend service
   - type: web
-    name: gobblet-backend
+    name: jerrysgobblet
     env: node
-    buildCommand: npm install
+    buildCommand: |
+      npm install
+      cd client && npm install && npm run build
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
@@ -17,22 +19,8 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_CALLBACK_URL
-        value: https://gobblet-backend.onrender.com/auth/google/callback
+        value: https://jerrysgobblet.onrender.com/auth/google/callback
       - key: SESSION_SECRET
         generateValue: true
       - key: CLIENT_URL
         value: https://jerrysgobblet.onrender.com
-
-  # Frontend React app
-  - type: web
-    name: jerrysgobblet
-    env: static
-    buildCommand: cd client && npm install && npm run build
-    staticPublishPath: ./client/dist
-    envVars:
-      - key: VITE_BACKEND_URL
-        value: https://gobblet-backend.onrender.com
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html

@@ -714,6 +714,7 @@ h1 {
 .subtitle {
   font-size: 1.2rem;
   color: #aaa;
+  margin-top: .5rem;
   margin-bottom: 1rem;
   letter-spacing: 0.1em;
 }
@@ -1687,6 +1688,7 @@ h1 {
     font-size: 20px;
   }
 }
+
 /* ===== HOW TO PLAY STYLES ===== */
 
 .how-to-play {
@@ -1783,11 +1785,11 @@ h1 {
   .how-to-tabs {
     flex-direction: column;
   }
-  
+
   .tab-btn {
     width: 100%;
   }
-  
+
   .rules-content {
     padding: 1.5rem;
   }
