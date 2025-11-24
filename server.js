@@ -58,8 +58,16 @@ app.get('/auth/google',
 app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: process.env.CLIENT_URL || 'http://localhost:5173' }),
     (req, res) => {
-        // Successful authentication, redirect to client
-        res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
+        // Explicitly save session before redirect to ensure cookie is set
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
+            }
+            console.log('User logged in:', req.user.email);
+            // Successful authentication, redirect to client
+            res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
+        });
     }
 );
 
