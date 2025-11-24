@@ -25,7 +25,7 @@ const GameRoom = () => {
     const [gameState, setGameState] = useState(null);
     const [selection, setSelection] = useState(null); // { type: 'hand'|'board', stackIndex?, row?, col? }
     const [lastMove, setLastMove] = useState(null);
-    const [viewingBoard, setViewingBoard] = useState(false);
+
     const playerIdRef = useRef(null); // To store the player's socket ID
     const gameIdRef = useRef(null); // To store the current game ID
 
@@ -107,12 +107,7 @@ const GameRoom = () => {
     }, [gameState?.state]);
 
 
-    useEffect(() => {
-        // Reset viewing board state when game restarts
-        if (gameState && (gameState.state === 'playing' || gameState.state === 'waiting')) {
-            setViewingBoard(false);
-        }
-    }, [gameState?.state]);
+
 
     // Auto-clear last move highlighting after 3 seconds
     useEffect(() => {
@@ -272,26 +267,22 @@ const GameRoom = () => {
 
     return (
         <div className="app-container">
-            {viewingBoard ? (
-                <div className="header-spacer"></div>
-            ) : (
-                <>
-                    <div className="page-header">
-                        <img src="/goblet1.png" alt="Jerry the Goblin" className="header-icon" />
-                        <h1>Jerry's Gobblet</h1>
-                    </div>
+            <div className="page-header">
+                <img src="/goblet1.png" alt="Jerry the Goblin" className="header-icon" />
+                <h1>Jerry's Gobblet</h1>
+            </div>
 
-                    <div
-                        className="game-status-message"
-                        style={{ backgroundColor: getStatusBadgeColor() }}
-                    >
-                        {getStatusMessage()}
-                    </div>
-                </>
+            {!gameState.winner && (
+                <div
+                    className="game-status-message"
+                    style={{ backgroundColor: getStatusBadgeColor() }}
+                >
+                    {getStatusMessage()}
+                </div>
             )}
 
             {/* Opponent Hand */}
-            {gameState.state !== 'waiting' && (
+            {gameState.state !== 'waiting' && !gameState.winner && (
                 <PlayerHand
                     hand={gameState.playerHands[actualOpponentColor] || [[], [], []]}
                     color={actualOpponentColor}
@@ -308,50 +299,36 @@ const GameRoom = () => {
                 turn={turnColor}
                 selectedCell={selection && selection.type === 'board' ? selection : null}
                 lastMove={lastMove}
+                winningLine={gameState.winningLine}
             />
 
             {/* My Hand */}
-            <PlayerHand
-                hand={gameState.playerHands[myPlayerColor] || [[], [], []]}
-                color={myPlayerColor}
-                onPieceClick={handleHandPieceClick}
-                selectedStackIndex={selection && selection.type === 'hand' ? selection.stackIndex : null}
-                isCurrentPlayer={true}
-                isMyTurn={isMyTurn}
-                player={gameState.players.find(p => p.color === myPlayerColor)}
-            />
-
-            {/* Win Overlay */}
-            {gameState.winner && !viewingBoard && (
-                <div className="win-overlay">
-                    <div className="win-content">
-                        <h2 className="win-title">{gameState.winner === myPlayerColor ? 'VICTORY!' : 'DEFEAT'}</h2>
-                        <p className="win-subtitle">
-                            {gameState.winner === myPlayerColor ? 'You gobbled your way to glory!' : 'Better luck next time.'}
-                        </p>
-                        <div className="game-over-actions">
-                            <button className="action-btn view-board" onClick={() => setViewingBoard(true)}>
-                                View Board
-                            </button>
-                            <button className="action-btn play-again" onClick={handlePlayAgain}>
-                                Play Again
-                            </button>
-                            <button className="action-btn return-home" onClick={() => navigate('/')}>
-                                Return Home
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {!gameState.winner && (
+                <PlayerHand
+                    hand={gameState.playerHands[myPlayerColor] || [[], [], []]}
+                    color={myPlayerColor}
+                    onPieceClick={handleHandPieceClick}
+                    selectedStackIndex={selection && selection.type === 'hand' ? selection.stackIndex : null}
+                    isCurrentPlayer={true}
+                    isMyTurn={isMyTurn}
+                    player={gameState.players.find(p => p.color === myPlayerColor)}
+                />
             )}
 
-            {/* Back to Menu button when viewing board in finished state */}
-            {gameState.winner && viewingBoard && (
-                <div className="view-board-controls">
-                    <button className="action-btn return-home small" onClick={() => setViewingBoard(false)}>
-                        Show Menu
-                    </button>
-                    <div className="game-status-message">
-                        {gameState.winner === playerColor ? 'You won!' : `${gameState.winner} won!`}
+            {/* Game Over Footer */}
+            {gameState.winner && (
+                <div className="game-over-footer">
+                    <h2 className="win-title">{gameState.winner === myPlayerColor ? 'VICTORY!' : 'DEFEAT'}</h2>
+                    <p className="win-subtitle">
+                        {gameState.winner === myPlayerColor ? 'You gobbled your way to glory!' : 'Better luck next time.'}
+                    </p>
+                    <div className="game-over-actions inline">
+                        <button className="action-btn play-again" onClick={handlePlayAgain}>
+                            Play Again
+                        </button>
+                        <button className="action-btn return-home" onClick={() => navigate('/')}>
+                            Return Home
+                        </button>
                     </div>
                 </div>
             )}

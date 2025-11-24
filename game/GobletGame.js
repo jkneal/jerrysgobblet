@@ -20,6 +20,9 @@ class GobletGame {
 
         // Track last move for highlighting
         this.lastMove = null; // { type: 'place'|'move', toRow, toCol, fromRow?, fromCol? }
+
+        // Track winning line for highlighting
+        this.winningLine = null; // Array of {row, col}
     }
 
     // Async save to database (fire-and-forget)
@@ -341,13 +344,62 @@ class GobletGame {
         for (const w of winners) {
             if (w !== currentPlayerColor) {
                 this.winner = w;
+                this.calculateWinningLine(w);
                 return true;
             }
         }
 
         // Otherwise, the current player wins
         this.winner = currentPlayerColor;
+        this.calculateWinningLine(currentPlayerColor);
         return true;
+    }
+
+    calculateWinningLine(winnerColor) {
+        const board = this.board;
+        const getColor = (r, c) => {
+            const stack = board[r][c];
+            return stack.length > 0 ? stack[stack.length - 1].color : null;
+        };
+
+        // Check rows
+        for (let r = 0; r < 4; r++) {
+            if (getColor(r, 0) === winnerColor &&
+                getColor(r, 1) === winnerColor &&
+                getColor(r, 2) === winnerColor &&
+                getColor(r, 3) === winnerColor) {
+                this.winningLine = [{ r, c: 0 }, { r, c: 1 }, { r, c: 2 }, { r, c: 3 }];
+                return;
+            }
+        }
+
+        // Check cols
+        for (let c = 0; c < 4; c++) {
+            if (getColor(0, c) === winnerColor &&
+                getColor(1, c) === winnerColor &&
+                getColor(2, c) === winnerColor &&
+                getColor(3, c) === winnerColor) {
+                this.winningLine = [{ r: 0, c }, { r: 1, c }, { r: 2, c }, { r: 3, c }];
+                return;
+            }
+        }
+
+        // Check diagonals
+        if (getColor(0, 0) === winnerColor &&
+            getColor(1, 1) === winnerColor &&
+            getColor(2, 2) === winnerColor &&
+            getColor(3, 3) === winnerColor) {
+            this.winningLine = [{ r: 0, c: 0 }, { r: 1, c: 1 }, { r: 2, c: 2 }, { r: 3, c: 3 }];
+            return;
+        }
+
+        if (getColor(0, 3) === winnerColor &&
+            getColor(1, 2) === winnerColor &&
+            getColor(2, 1) === winnerColor &&
+            getColor(3, 0) === winnerColor) {
+            this.winningLine = [{ r: 0, c: 3 }, { r: 1, c: 2 }, { r: 2, c: 1 }, { r: 3, c: 0 }];
+            return;
+        }
     }
 
     getGameState() {
@@ -359,7 +411,8 @@ class GobletGame {
             state: this.state,
             winner: this.winner,
             playerHands: this.playerHands, // Frontend needs to know available pieces
-            lastMove: this.lastMove // For highlighting opponent moves
+            lastMove: this.lastMove, // For highlighting opponent moves
+            winningLine: this.winningLine // For highlighting winning cells
         };
     }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import GoblinPiece from './GoblinPiece';
 
-const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, lastMove }) => {
+const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, lastMove, winningLine }) => {
     // Calculate arrow position and rotation for board-to-board moves
     const renderMoveArrow = () => {
         if (!lastMove || lastMove.type !== 'move') return null;
@@ -66,11 +66,12 @@ const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, last
                         const topPiece = cell.length > 0 ? cell[cell.length - 1] : null;
                         const isOpponentPiece = topPiece && topPiece.color !== currentPlayer;
                         const isLastMove = lastMove && lastMove.toRow === rowIndex && lastMove.toCol === colIndex;
+                        const isWinningCell = winningLine && winningLine.some(cell => cell.r === rowIndex && cell.c === colIndex);
 
                         return (
                             <div
                                 key={`${rowIndex}-${colIndex}`}
-                                className={`board-cell ${isSelected ? 'selected' : ''} ${isOpponentPiece ? 'opponent-piece' : ''} ${isLastMove ? 'last-move' : ''}`}
+                                className={`board-cell ${isSelected ? 'selected' : ''} ${isOpponentPiece ? 'opponent-piece' : ''} ${isLastMove ? 'last-move' : ''} ${isWinningCell ? 'winning-cell' : ''}`}
                                 onClick={() => onCellClick(rowIndex, colIndex)}
                             >
                                 {cell.length > 0 && (
