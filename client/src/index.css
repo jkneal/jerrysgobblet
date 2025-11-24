@@ -1687,3 +1687,117 @@ h1 {
     font-size: 20px;
   }
 }
+/* ===== HOW TO PLAY STYLES ===== */
+
+.how-to-play {
+  max-width: 800px;
+}
+
+.how-to-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.tab-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  color: #aaa;
+  padding: 0.75rem 2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.tab-btn.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4);
+}
+
+.rules-content {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.rules-content section {
+  margin-bottom: 2rem;
+}
+
+.rules-content section:last-child {
+  margin-bottom: 0;
+}
+
+.rules-content h2 {
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  border-bottom: 2px solid rgba(0, 188, 212, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+.rules-content h3 {
+  color: var(--primary-color);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.rules-content p {
+  color: #ddd;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.rules-content ul,
+.rules-content ol {
+  color: #ddd;
+  line-height: 1.8;
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.rules-content li {
+  margin-bottom: 0.5rem;
+}
+
+.rules-content strong {
+  color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+  .how-to-tabs {
+    flex-direction: column;
+  }
+  
+  .tab-btn {
+    width: 100%;
+  }
+  
+  .rules-content {
+    padding: 1.5rem;
+  }
+}
+
+.color-badge {
+  background: rgba(0, 34, 102, 0.3);
+  color: #6699ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(102, 153, 255, 0.3);
+  font-weight: 600;
+}
