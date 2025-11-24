@@ -18,53 +18,94 @@ import PlayerHand from '../components/PlayerHand';
 const GameRoom = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { color } = location.state || {}; // Get chosen color from Lobby
+    const playerColor = location.state?.color || '#ffd700'; // Default to gold
+    const gameId = location.state?.gameId; // Optional: join specific game
 
-    const [isConnected, setIsConnected] = useState(false);
+    const [socket, setSocket] = useState(null);
     const [gameState, setGameState] = useState(null);
-    const [playerId, setPlayerId] = useState(null);
-    const [selection, setSelection] = useState(null);
-    const [viewingBoard, setViewingBoard] = useState(false);
+    const [selection, setSelection] = useState(null); // { type: 'hand'|'board', stackIndex?, row?, col? }
     const [lastMove, setLastMove] = useState(null);
-    const socketRef = useRef(null);
+    const [viewingBoard, setViewingBoard] = useState(false);
+    const playerIdRef = useRef(null); // To store the player's socket ID
+    const gameIdRef = useRef(null); // To store the current game ID
 
+
+    // Initialize socket connection
     useEffect(() => {
-        // Use environment variable for backend URL, fallback to localhost for development
         const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-        const socket = io(backendUrl, {
-            transports: ['websocket'],
+        const newSocket = io(backendUrl, {
+            withCredentials: true
         });
 
-        socketRef.current = socket;
+        newSocket.on('connect', () => {
+            console.log('Connected to server');
+            playerIdRef.current = newSocket.id;
 
-        function onConnect() {
-            setIsConnected(true);
-            setPlayerId(socket.id);
-            // Join game with selected color
-            socket.emit('join_game', { color });
-        }
+            // Check if we have a stored gameId (from page refresh)
+            const storedGameId = sessionStorage.getItem('currentGameId');
 
-        function onDisconnect() {
-            setIsConnected(false);
-        }
+            // Priority: use gameId from navigation state, otherwise try stored gameId
+            if (gameId) {
+                // Joining a specific game (from lobby or color preferences)
+                console.log('Joining game:', gameId);
+                newSocket.emit('join_game', { color: playerColor, gameId });
+                // Update stored gameId
+                sessionStorage.setItem('currentGameId', gameId);
+            } else if (storedGameId) {
+                // Attempt to rejoin the stored game (page refresh)
+                console.log('Attempting to rejoin game:', storedGameId);
+                newSocket.emit('rejoin_game', { gameId: storedGameId });
+            } else {
+                // New game with matchmaking
+                console.log('Starting new game with color:', playerColor);
+                newSocket.emit('join_game', { color: playerColor });
+            }
+        });
 
-        function onGameUpdate(state) {
+        newSocket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+
+        newSocket.on('game_update', (state) => {
             setGameState(state);
             setSelection(null);
-        }
 
-        socket.on('connect', onConnect);
-        socket.on('disconnect', onDisconnect);
-        socket.on('game_update', onGameUpdate);
+            // Store gameId for reconnection
+            if (state.id) {
+                gameIdRef.current = state.id;
+                sessionStorage.setItem('currentGameId', state.id);
+            }
+        });
+
+        newSocket.on('game_error', (error) => {
+            console.error('Game error:', error);
+
+            // Only clear and redirect if it's a "Game not found" or "Not a player" error
+            // and we were trying to rejoin
+            const storedGameId = sessionStorage.getItem('currentGameId');
+            if (storedGameId && (error.message === 'Game not found' || error.message === 'You are not a player in this game')) {
+                sessionStorage.removeItem('currentGameId');
+                navigate('/lobby');
+            }
+        });
+
+        setSocket(newSocket);
 
         return () => {
-            socket.off('connect', onConnect);
-            socket.off('disconnect', onDisconnect);
-            socket.off('game_update', onGameUpdate);
-            socket.disconnect();
-            socketRef.current = null;
+            newSocket.disconnect();
         };
-    }, [color]);
+    }, [playerColor, gameId]);
+
+    // Clear stored gameId when leaving the page
+    useEffect(() => {
+        return () => {
+            // Only clear if game is finished
+            if (gameState?.state === 'finished') {
+                sessionStorage.removeItem('currentGameId');
+            }
+        };
+    }, [gameState?.state]);
+
 
     useEffect(() => {
         // Reset viewing board state when game restarts
@@ -86,8 +127,9 @@ const GameRoom = () => {
 
     const handleHandPieceClick = (stackIndex) => {
         if (!gameState || gameState.winner) return;
-        const playerColor = gameState.players.find(p => p.id === playerId)?.color;
-        if (gameState.turn !== playerId) return;
+        const playerId = playerIdRef.current;
+        const myPlayer = gameState.players.find(p => p.id === playerId);
+        if (!myPlayer || gameState.turn !== playerId) return;
 
         // Select piece from hand
         if (selection && selection.type === 'hand' && selection.stackIndex === stackIndex) {
@@ -96,19 +138,18 @@ const GameRoom = () => {
             setSelection({ type: 'hand', stackIndex });
         }
     };
-
     const handleBoardCellClick = (row, col) => {
-        if (!gameState || !socketRef.current) return;
+        if (!gameState || !socket) return;
         // If game is over, don't allow interaction unless we want to allow viewing
         // But for now, disable moves if winner exists
         if (gameState.winner) return;
 
-        const playerColor = gameState.players.find(p => p.id === playerId)?.color;
+        const playerId = playerIdRef.current;
         if (gameState.turn !== playerId) return;
 
         if (selection && selection.type === 'hand') {
             // Place piece
-            socketRef.current.emit('place_piece', {
+            socket.emit('place_piece', {
                 stackIndex: selection.stackIndex,
                 row,
                 col
@@ -120,7 +161,7 @@ const GameRoom = () => {
                 setSelection(null); // Deselect if clicking same cell
                 return;
             }
-            socketRef.current.emit('move_piece', {
+            socket.emit('move_piece', {
                 fromRow: selection.row,
                 fromCol: selection.col,
                 toRow: row,
@@ -131,9 +172,13 @@ const GameRoom = () => {
             // Select piece on board to move
             // Validate: must be my piece
             const stack = gameState.board[row][col];
+            const playerId = playerIdRef.current;
+            const myPlayer = gameState.players.find(p => p.id === playerId);
+            const myColor = myPlayer?.color;
+
             if (stack.length > 0) {
                 const topPiece = stack[stack.length - 1];
-                if (topPiece.color === playerColor) {
+                if (topPiece.color === myColor) {
                     setSelection({ type: 'board', row, col });
                 }
             }
@@ -141,8 +186,8 @@ const GameRoom = () => {
     };
 
     const handlePlayAgain = () => {
-        if (socketRef.current && socketRef.current.connected) {
-            socketRef.current.emit('reset_game');
+        if (socket && socket.connected) {
+            socket.emit('reset_game');
         }
     };
 
@@ -155,11 +200,10 @@ const GameRoom = () => {
         );
     }
 
-    const playerColor = gameState.players.find(p => p.id === playerId)?.color;
-    const opponentColor = playerColor === 'white' ? 'black' : 'white'; // Fallback if 2 players not yet joined
-    // Actually, we should get opponent color from game state players list if available
+    const playerId = playerIdRef.current;
+    const myPlayerColor = gameState.players.find(p => p.id === playerId)?.color || playerColor;
     const opponent = gameState.players.find(p => p.id !== playerId);
-    const actualOpponentColor = opponent ? opponent.color : (playerColor === 'white' ? 'black' : 'white');
+    const actualOpponentColor = opponent ? opponent.color : (myPlayerColor === '#ffd700' ? '#c0c0c0' : '#ffd700');
 
     const isMyTurn = gameState.turn === playerId;
     const turnPlayer = gameState.players.find(p => p.id === gameState.turn);
@@ -201,13 +245,17 @@ const GameRoom = () => {
             if (gameState.winner === playerColor) {
                 return 'You win!';
             } else {
-                return `${getDisplayColor(gameState.winner)} wins!`;
+                const winningPlayer = gameState.players.find(p => p.color === gameState.winner);
+                const winnerName = winningPlayer?.displayName || 'Opponent';
+                return `${winnerName} wins!`;
             }
         }
         if (isMyTurn) {
             return 'Your turn';
         } else {
-            return `${getDisplayColor(turnColor)}'s turn`;
+            const turnPlayerData = gameState.players.find(p => p.id === gameState.turn);
+            const turnPlayerName = turnPlayerData?.displayName || 'Opponent';
+            return `${turnPlayerName}'s turn`;
         }
     };
 
@@ -249,13 +297,14 @@ const GameRoom = () => {
                     color={actualOpponentColor}
                     onPieceClick={() => { }}
                     isCurrentPlayer={false}
+                    player={opponent}
                 />
             )}
 
             <GameBoard
                 board={gameState.board}
                 onCellClick={handleBoardCellClick}
-                currentPlayer={playerColor}
+                currentPlayer={myPlayerColor}
                 turn={turnColor}
                 selectedCell={selection && selection.type === 'board' ? selection : null}
                 lastMove={lastMove}
@@ -263,21 +312,22 @@ const GameRoom = () => {
 
             {/* My Hand */}
             <PlayerHand
-                hand={gameState.playerHands[playerColor] || [[], [], []]}
-                color={playerColor}
+                hand={gameState.playerHands[myPlayerColor] || [[], [], []]}
+                color={myPlayerColor}
                 onPieceClick={handleHandPieceClick}
                 selectedStackIndex={selection && selection.type === 'hand' ? selection.stackIndex : null}
                 isCurrentPlayer={true}
                 isMyTurn={isMyTurn}
+                player={gameState.players.find(p => p.color === myPlayerColor)}
             />
 
             {/* Win Overlay */}
             {gameState.winner && !viewingBoard && (
                 <div className="win-overlay">
                     <div className="win-content">
-                        <h2 className="win-title">{gameState.winner === playerColor ? 'VICTORY!' : 'DEFEAT'}</h2>
+                        <h2 className="win-title">{gameState.winner === myPlayerColor ? 'VICTORY!' : 'DEFEAT'}</h2>
                         <p className="win-subtitle">
-                            {gameState.winner === playerColor ? 'You gobbled your way to glory!' : 'Better luck next time.'}
+                            {gameState.winner === myPlayerColor ? 'You gobbled your way to glory!' : 'Better luck next time.'}
                         </p>
                         <div className="game-over-actions">
                             <button className="action-btn view-board" onClick={() => setViewingBoard(true)}>

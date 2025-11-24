@@ -19,24 +19,22 @@ const COLOR_NAMES = {
     '#dc143c': 'Crimson'
 };
 
-const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPlayer, isMyTurn = true }) => {
-    const getColorName = (hex) => {
-        if (!hex) return '';
-        // Check if it's a known hex code
-        const name = COLOR_NAMES[hex.toLowerCase()];
-        if (name) return name;
-        // Fallback for named colors or unknown hexes
-        return hex.charAt(0).toUpperCase() + hex.slice(1);
-    };
-
-    const displayColor = getColorName(color);
-    const handTitle = isCurrentPlayer ? 'Your Hand' : `${displayColor}'s Hand`;
+const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPlayer, isMyTurn = true, player }) => {
+    const displayName = player?.displayName || (isCurrentPlayer ? 'Your Hand' : 'Opponent');
+    const avatarUrl = player?.avatarUrl;
     const isDisabled = isCurrentPlayer && !isMyTurn;
 
     return (
         <div className={`player-hand ${color} ${isCurrentPlayer ? 'current-player' : ''} ${isDisabled ? 'disabled' : ''}`}>
             <div className="hand-header">
-                <h3>{handTitle}</h3>
+                {avatarUrl && (
+                    <img
+                        src={avatarUrl}
+                        alt={displayName}
+                        className="hand-avatar"
+                    />
+                )}
+                <h3>{displayName}</h3>
             </div>
             <div className="hand-stacks">
                 {hand.map((stack, index) => (

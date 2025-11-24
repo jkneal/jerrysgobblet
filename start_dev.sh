@@ -1,7 +1,7 @@
 cd c#!/bin/bash
 # Start backend
 echo "Starting Backend..."
-node server.js &
+npm start &
 BACKEND_PID=$!
 
 # Start frontend

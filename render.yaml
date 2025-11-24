@@ -1,3 +1,8 @@
+databases:
+  - name: jerrysgobblet-db
+    databaseName: jerrysgobblet
+    user: jerrysgobblet
+
 services:
   # Backend Node.js server with Socket.IO
   - type: web
@@ -8,6 +13,18 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jerrysgobblet-db
+          property: connectionString
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        value: https://jerrysgobblet.onrender.com
 
   # Frontend React app
   - type: web

@@ -1,9 +1,11 @@
+const GameModel = require('../models/GameModel');
+
 class GobletGame {
     constructor(id) {
         this.id = id;
-        this.players = []; // { id: socketId, color: 'white' | 'black' }
+        this.players = []; // { id: socketId, userId: dbUserId, color: hex, displayName: string, avatarUrl: string }
         // 4x4 grid, each cell is a stack of pieces. 
-        // Piece: { color: 'white'|'black', size: 1|2|3|4 }
+        // Piece: { color: hex, size: 1|2|3|4 }
         this.board = Array(4).fill(null).map(() => Array(4).fill(null).map(() => []));
         this.turn = null;
         this.state = 'waiting'; // waiting, playing, finished
@@ -14,16 +16,23 @@ class GobletGame {
         // or just available from external stacks), we can represent this as 3 stacks per player.
         // Actually, in Gobblet, you have 3 stacks of 4 pieces nested. You can only play the top one.
         // So we track 3 stacks per player.
-        this.playerHands = {
-            white: [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
-            black: [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]]
-        };
+        this.playerHands = {};
 
         // Track last move for highlighting
         this.lastMove = null; // { type: 'place'|'move', toRow, toCol, fromRow?, fromCol? }
     }
 
-    addPlayer(playerId, preferredColor) {
+    // Async save to database (fire-and-forget)
+    saveToDatabase() {
+        setImmediate(() => {
+            GameModel.save(this);
+            if (this.players.length > 0) {
+                GameModel.savePlayers(this.id, this.players);
+            }
+        });
+    }
+
+    addPlayer(playerId, preferredColor, userData = null) {
         // Check if player is already in the game
         if (this.players.some(p => p.id === playerId)) {
             return true; // Already joined
@@ -43,7 +52,7 @@ class GobletGame {
 
             // If we are the first player, take preference or default to 'gold'
             if (this.players.length === 0) {
-                color = preferredColor || 'gold';
+                color = preferredColor || '#ffd700'; // gold
             } else {
                 // Second player
                 if (preferredColor && this.isColorAvailable(preferredColor)) {
@@ -51,17 +60,27 @@ class GobletGame {
                 } else {
                     // Assign a complementary or random available color
                     // For now, let's just ensure it's different from player 1
-                    color = this.players[0].color === 'gold' ? 'silver' : 'gold';
-                    // If player 1 picked something else, we need a robust fallback.
-                    // Let's just pick 'silver' if p1 is not silver, else 'gold'.
-                    if (this.players[0].color === 'silver') color = 'gold';
-                    else if (this.players[0].color === 'gold') color = 'silver';
-                    else color = 'silver'; // Default 2nd player color
+                    const p1Color = this.players[0].color;
+                    color = p1Color === '#ffd700' ? '#c0c0c0' : '#ffd700'; // gold/silver
+                    // If player 1 picked something else, default to silver
+                    if (p1Color !== '#ffd700' && p1Color !== '#c0c0c0') {
+                        color = '#c0c0c0'; // silver
+                    }
                 }
             }
         }
 
-        this.players.push({ id: playerId, color });
+        const player = {
+            id: playerId,
+            color,
+            userId: userData?.id || null,
+            displayName: userData?.displayName || `Player ${this.players.length + 1}`,
+            avatarUrl: userData?.avatarUrl || null,
+            connected: true,
+            lastSeen: Date.now()
+        };
+
+        this.players.push(player);
 
         // Initialize hand for this color
         this.playerHands[color] = [
@@ -74,6 +93,10 @@ class GobletGame {
             this.state = 'playing';
             this.turn = this.players[0].id; // First player starts
         }
+
+        // Save to database
+        this.saveToDatabase();
+
         return true;
     }
 
@@ -115,6 +138,9 @@ class GobletGame {
         // Clear last move
         this.lastMove = null;
 
+        // Save to database
+        this.saveToDatabase();
+
         // If we have default colors but no players (shouldn't happen in active game reset),
         // we might want to keep defaults, but for now this is safer for active games.
     }
@@ -122,6 +148,32 @@ class GobletGame {
     getPlayerColor(playerId) {
         const player = this.players.find(p => p.id === playerId);
         return player ? player.color : null;
+    }
+
+    setPlayerConnected(playerId, isConnected) {
+        const player = this.players.find(p => p.id === playerId);
+        if (player) {
+            player.connected = isConnected;
+            player.lastSeen = Date.now();
+            return true;
+        }
+        return false;
+    }
+
+    hasActivePlayers() {
+        return this.players.some(p => p.connected);
+    }
+
+    allPlayersDisconnected() {
+        return this.players.length > 0 && this.players.every(p => !p.connected);
+    }
+
+    getTimeSinceLastActivity() {
+        if (this.players.length === 0) return Date.now(); // Treat empty as old
+
+        // Get the most recent lastSeen time
+        const lastActivity = Math.max(...this.players.map(p => p.lastSeen || 0));
+        return Date.now() - lastActivity;
     }
 
     // Place a piece from hand to board
@@ -157,8 +209,11 @@ class GobletGame {
 
         // Track last move
         this.lastMove = { type: 'place', toRow, toCol };
+        this.finishTurn(); // This will call checkWin and switch turns
 
-        this.finishTurn();
+        // Save to database
+        this.saveToDatabase();
+
         return true;
     }
 
@@ -206,8 +261,11 @@ class GobletGame {
 
         // Track last move
         this.lastMove = { type: 'move', fromRow, fromCol, toRow, toCol };
+        this.finishTurn(); // This will call checkWin and switch turns
 
-        this.finishTurn();
+        // Save to database
+        this.saveToDatabase();
+
         return true;
     }
 
