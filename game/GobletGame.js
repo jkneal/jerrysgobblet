@@ -141,6 +141,9 @@ class GobletGame {
         // Clear last move
         this.lastMove = null;
 
+        // Clear winning line
+        this.winningLine = null;
+
         // Save to database
         this.saveToDatabase();
 

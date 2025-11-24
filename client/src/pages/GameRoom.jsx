@@ -3,6 +3,8 @@ import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import GameBoard from '../components/GameBoard';
 import PlayerHand from '../components/PlayerHand';
+import ChatPanel from '../components/ChatPanel';
+import useSound from '../hooks/useSound';
 
 // We'll manage the socket connection at the top level or singleton if needed, 
 // but for now, let's keep it simple. If we navigate away, we might disconnect.
@@ -25,9 +27,14 @@ const GameRoom = () => {
     const [gameState, setGameState] = useState(null);
     const [selection, setSelection] = useState(null); // { type: 'hand'|'board', stackIndex?, row?, col? }
     const [lastMove, setLastMove] = useState(null);
+    const [chatOpen, setChatOpen] = useState(false);
 
     const playerIdRef = useRef(null); // To store the player's socket ID
     const gameIdRef = useRef(null); // To store the current game ID
+    const previousTurnRef = useRef(null); // Track previous turn for opponent sound
+    const victoryPlayedRef = useRef(false); // Track if victory music has been played
+
+    const { playSound, stopSound, stopAllSounds } = useSound();
 
 
     // Initialize socket connection
@@ -67,6 +74,13 @@ const GameRoom = () => {
         });
 
         newSocket.on('game_update', (state) => {
+            // Play opponent sound if turn changed and it's not our turn
+            const playerId = playerIdRef.current;
+            if (previousTurnRef.current && state.turn !== playerId && previousTurnRef.current !== state.turn) {
+                playSound('opponent');
+            }
+            previousTurnRef.current = state.turn;
+
             setGameState(state);
             setSelection(null);
 
@@ -92,6 +106,7 @@ const GameRoom = () => {
         setSocket(newSocket);
 
         return () => {
+            stopAllSounds();
             newSocket.disconnect();
         };
     }, [playerColor, gameId]);
@@ -105,6 +120,38 @@ const GameRoom = () => {
             }
         };
     }, [gameState?.state]);
+
+    // Play victory music when game ends
+    useEffect(() => {
+        if (gameState?.winner && !victoryPlayedRef.current) {
+            playSound('victory');
+            victoryPlayedRef.current = true;
+        } else if (!gameState?.winner && victoryPlayedRef.current) {
+            // Game was reset, stop victory music
+            stopSound('victory');
+            victoryPlayedRef.current = false;
+        }
+    }, [gameState?.winner, playSound, stopSound]);
+
+    // Stop all sounds when component unmounts
+    useEffect(() => {
+        return () => {
+            stopAllSounds();
+        };
+    }, [stopAllSounds]);
+
+    // Send heartbeat to keep game alive
+    useEffect(() => {
+        if (!socket) return;
+
+        const heartbeatInterval = setInterval(() => {
+            if (socket.connected) {
+                socket.emit('player_heartbeat');
+            }
+        }, 30000); // Every 30 seconds
+
+        return () => clearInterval(heartbeatInterval);
+    }, [socket]);
 
 
 
@@ -130,6 +177,7 @@ const GameRoom = () => {
         if (selection && selection.type === 'hand' && selection.stackIndex === stackIndex) {
             setSelection(null); // Deselect if already selected
         } else {
+            playSound('select');
             setSelection({ type: 'hand', stackIndex });
         }
     };
@@ -144,6 +192,7 @@ const GameRoom = () => {
 
         if (selection && selection.type === 'hand') {
             // Place piece
+            playSound('place');
             socket.emit('place_piece', {
                 stackIndex: selection.stackIndex,
                 row,
@@ -156,6 +205,7 @@ const GameRoom = () => {
                 setSelection(null); // Deselect if clicking same cell
                 return;
             }
+            playSound('place');
             socket.emit('move_piece', {
                 fromRow: selection.row,
                 fromCol: selection.col,
@@ -174,6 +224,7 @@ const GameRoom = () => {
             if (stack.length > 0) {
                 const topPiece = stack[stack.length - 1];
                 if (topPiece.color === myColor) {
+                    playSound('select');
                     setSelection({ type: 'board', row, col });
                 }
             }
@@ -182,6 +233,8 @@ const GameRoom = () => {
 
     const handlePlayAgain = () => {
         if (socket && socket.connected) {
+            stopSound('victory');
+            victoryPlayedRef.current = false;
             socket.emit('reset_game');
         }
     };
@@ -331,6 +384,18 @@ const GameRoom = () => {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {/* Chat Panel */}
+            {gameState && (
+                <ChatPanel
+                    socket={socket}
+                    gameId={gameState.id}
+                    playerId={playerId}
+                    playerName={gameState.players.find(p => p.id === playerId)?.displayName || 'Player'}
+                    isOpen={chatOpen}
+                    onToggle={() => setChatOpen(!chatOpen)}
+                />
             )}
         </div>
     );

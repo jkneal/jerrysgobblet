@@ -365,6 +365,18 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('player_heartbeat', () => {
+        const game = gameManager.getGameByPlayerId(socket.id);
+        if (game) {
+            game.setPlayerConnected(socket.id, true);
+        }
+    });
+
+    socket.on('chat_message', ({ gameId, message }) => {
+        // Broadcast message to all players in the game room
+        io.to(gameId).emit('chat_message', message);
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         // Do NOT remove player on disconnect to allow reconnection

@@ -1,8 +1,3 @@
-databases:
-  - name: jerrysgobblet-db
-    databaseName: jerrysgobblet
-    user: jerrysgobblet
-
 services:
   # Backend Node.js server with Socket.IO
   - type: web
@@ -21,6 +16,8 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: GOOGLE_CALLBACK_URL
+        value: https://gobblet-backend.onrender.com/auth/google/callback
       - key: SESSION_SECRET
         generateValue: true
       - key: CLIENT_URL
