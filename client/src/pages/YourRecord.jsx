@@ -75,25 +75,25 @@ const YourRecord = () => {
 
             {/* Stats Summary Card */}
             <div className="stats-summary-card">
-                <div className="stat-item">
+                <div className="stat-item stat-rank">
                     <span className="stat-label">Rank</span>
                     <span className="stat-value">#{stats?.rank || '-'}</span>
                 </div>
-                <div className="stat-item">
-                    <span className="stat-label">Wins</span>
-                    <span className="stat-value">{stats?.wins || 0}</span>
-                </div>
-                <div className="stat-item">
-                    <span className="stat-label">Losses</span>
-                    <span className="stat-value">{stats?.losses || 0}</span>
-                </div>
-                <div className="stat-item">
+                <div className="stat-item stat-win-rate">
                     <span className="stat-label">Win Rate</span>
                     <span className="stat-value">
                         {stats?.total_games > 0
                             ? Math.round((stats.wins / stats.total_games) * 100) + '%'
                             : '-'}
                     </span>
+                </div>
+                <div className="stat-item stat-wins">
+                    <span className="stat-label">Wins</span>
+                    <span className="stat-value">{stats?.wins || 0}</span>
+                </div>
+                <div className="stat-item stat-losses">
+                    <span className="stat-label">Losses</span>
+                    <span className="stat-value">{stats?.losses || 0}</span>
                 </div>
             </div>
 
