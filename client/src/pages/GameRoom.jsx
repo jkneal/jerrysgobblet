@@ -63,23 +63,46 @@ const GameRoom = () => {
             playerIdRef.current = newSocket.id;
 
             // Check if we have a stored gameId (from page refresh)
-            const storedGameId = localStorage.getItem('currentGameId');
+            let storedGameId = null;
+            try {
+                const stored = localStorage.getItem('currentGameId');
+                if (stored) {
+                    const gameData = JSON.parse(stored);
+                    // Check if TTL is still valid
+                    if (gameData.timestamp && Date.now() - gameData.timestamp < gameData.ttl) {
+                        storedGameId = gameData.id;
+                    } else {
+                        // TTL expired, clear it
+                        console.log('Stored game ID expired, clearing');
+                        localStorage.removeItem('currentGameId');
+                    }
+                }
+            } catch (error) {
+                // Handle old format (plain string) or corrupted data
+                console.log('Clearing invalid stored game ID');
+                localStorage.removeItem('currentGameId');
+            }
 
             // Priority: use gameId from navigation state, otherwise try stored gameId
             if (gameId) {
                 // Joining a specific game (from lobby or color preferences)
                 console.log('Joining game:', gameId);
                 newSocket.emit('join_game', { color: playerColor, gameId });
-                // Update stored gameId
-                localStorage.setItem('currentGameId', gameId);
+                // Update stored gameId with TTL
+                const gameData = {
+                    id: gameId,
+                    timestamp: Date.now(),
+                    ttl: 300000 // 5 minutes
+                };
+                localStorage.setItem('currentGameId', JSON.stringify(gameData));
             } else if (storedGameId) {
                 // Attempt to rejoin the stored game (page refresh)
                 console.log('Attempting to rejoin game:', storedGameId);
                 newSocket.emit('rejoin_game', { gameId: storedGameId });
             } else {
-                // New game with matchmaking
-                console.log('Starting new game with color:', playerColor);
-                newSocket.emit('join_game', { color: playerColor });
+                // Create a new game
+                console.log('Creating new game with color:', playerColor);
+                newSocket.emit('create_game', { color: playerColor });
             }
         });
 
@@ -98,20 +121,26 @@ const GameRoom = () => {
             setGameState(state);
             setSelection(null);
 
-            // Store gameId for reconnection
-            if (state.id) {
+            // Store gameId for reconnection with TTL
+            if (state.id && state.state !== 'finished') {
                 gameIdRef.current = state.id;
-                localStorage.setItem('currentGameId', state.id);
+                const gameData = {
+                    id: state.id,
+                    timestamp: Date.now(),
+                    ttl: 300000 // 5 minutes
+                };
+                localStorage.setItem('currentGameId', JSON.stringify(gameData));
+            } else if (state.state === 'finished') {
+                // Clear storage when game finishes
+                localStorage.removeItem('currentGameId');
             }
         });
 
         newSocket.on('game_error', (error) => {
             console.error('Game error:', error);
 
-            // Only clear and redirect if it's a "Game not found" or "Not a player" error
-            // and we were trying to rejoin
-            const storedGameId = localStorage.getItem('currentGameId');
-            if (storedGameId && (error.message === 'Game not found' || error.message === 'You are not a player in this game')) {
+            // Clear stored game ID and redirect if needed
+            if (error.shouldReturnToLobby) {
                 localStorage.removeItem('currentGameId');
                 navigate('/lobby');
             }
@@ -122,12 +151,8 @@ const GameRoom = () => {
         return () => {
             stopAllSounds();
             newSocket.disconnect();
-            // Clear stored gameId when leaving the component
-            // unless it's just a page refresh (which would immediately reload)
-            const isPageRefresh = performance.navigation?.type === 1;
-            if (!isPageRefresh) {
-                localStorage.removeItem('currentGameId');
-            }
+            // Don't clear localStorage on unmount - let TTL and game finish handle it
+            // This allows proper reconnection on refresh
         };
     }, [playerColor, gameId, stopAllSounds]);
 
