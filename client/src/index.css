@@ -1707,14 +1707,21 @@ h1 {
   }
 
   .profile-page {
-    max-width: 90vw;
+    max-width: 800px;
     margin: 0 auto;
   }
 
   .profile-content {
     padding: 1rem;
-    margin-left: 0;
-    margin-right: 0;
+    max-width: 700px;
+  }
+
+  .win-subtitle {
+    font-size: 3.5vmin;
+  }
+
+  .action-btn {
+    font-size: 3vmin;
   }
 }
 
