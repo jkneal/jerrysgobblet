@@ -1733,6 +1733,11 @@ h1 {
   .info-row label {
     min-width: unset;
   }
+
+  .color-indicator {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* ===== HOW TO PLAY STYLES ===== */

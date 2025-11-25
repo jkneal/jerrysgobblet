@@ -36,13 +36,13 @@ const Lobby = () => {
 
     const handleJoinGame = (gameId) => {
         // Clear any stored game ID to ensure we join the new one
-        sessionStorage.removeItem('currentGameId');
+        localStorage.removeItem('currentGameId');
         navigate('/color-preferences', { state: { gameId } });
     };
 
     const handleCreateGame = () => {
         // Clear any stored game ID to ensure we start a new one
-        sessionStorage.removeItem('currentGameId');
+        localStorage.removeItem('currentGameId');
         navigate('/color-preferences');
     };
 
