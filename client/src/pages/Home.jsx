@@ -16,7 +16,12 @@ const Home = () => {
             )}
 
             <div className="title-graphic">
-                <img src="/goblet1.png" alt="Jerry the Goblin" className="goblet-icon" />
+                <img
+                    src="/goblet1.png"
+                    alt="Jerry the Goblin"
+                    className="goblet-icon"
+                    fetchpriority="high"
+                />
             </div>
             <h1 style={{ "marginTop": "-.5rem" }}>Jerry's Gobblet</h1>
 
