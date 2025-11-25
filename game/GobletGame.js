@@ -23,6 +23,9 @@ class GobletGame {
 
         // Track winning line for highlighting
         this.winningLine = null; // Array of {row, col}
+
+        // Track game start time for duration stats
+        this.startTime = Date.now();
     }
 
     // Async save to database (fire-and-forget)
@@ -79,6 +82,7 @@ class GobletGame {
             userId: userData?.id || null,
             displayName: userData?.displayName || `Player ${this.players.length + 1}`,
             avatarUrl: userData?.avatarUrl || null,
+            rank: userData?.rank || null,
             connected: true,
             lastSeen: Date.now()
         };

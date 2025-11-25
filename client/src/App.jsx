@@ -6,6 +6,7 @@ import Lobby from './pages/Lobby';
 import ColorPreferences from './pages/ColorPreferences';
 import GameRoom from './pages/GameRoom';
 import Profile from './pages/Profile';
+import YourRecord from './pages/YourRecord';
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/color-preferences" element={<ColorPreferences />} />
         <Route path="/play" element={<GameRoom />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/your-record" element={<YourRecord />} />
       </Routes>
     </AuthProvider>
   );

@@ -48,6 +48,15 @@ const LoginButton = () => {
                         className="dropdown-item"
                         onClick={() => {
                             setShowMenu(false);
+                            navigate('/your-record');
+                        }}
+                    >
+                        Your Record
+                    </button>
+                    <button
+                        className="dropdown-item"
+                        onClick={() => {
+                            setShowMenu(false);
                             logout();
                         }}
                     >

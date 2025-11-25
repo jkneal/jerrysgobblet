@@ -22,6 +22,7 @@ const COLOR_NAMES = {
 const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPlayer, isMyTurn = true, player }) => {
     const displayName = player?.displayName || (isCurrentPlayer ? 'Your Hand' : 'Opponent');
     const avatarUrl = player?.avatarUrl;
+    const rank = player?.rank;
     const isDisabled = isCurrentPlayer && !isMyTurn;
 
     return (
@@ -35,6 +36,7 @@ const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPl
                     />
                 )}
                 <h3>{displayName}</h3>
+                {rank && <span className="player-rank">#{rank}</span>}
             </div>
             <div className="hand-stacks">
                 {hand.map((stack, index) => (

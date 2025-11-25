@@ -10,6 +10,7 @@ const { pool } = require('./config/database');
 const gameManager = require('./game/GameManager');
 const User = require('./models/User');
 const GameModel = require('./models/GameModel');
+const StatsModel = require('./models/StatsModel'); // Added StatsModel import
 require('./config/passport');
 
 const app = express();
@@ -207,10 +208,13 @@ io.on('connection', (socket) => {
             try {
                 const dbUser = await User.findById(user);
                 if (dbUser) {
+                    // Fetch player stats to get rank
+                    const stats = await StatsModel.getPlayerStats(dbUser.id);
                     userData = {
                         id: dbUser.id,
                         displayName: User.getDisplayName(dbUser),
-                        avatarUrl: dbUser.avatar_url
+                        avatarUrl: dbUser.avatar_url,
+                        rank: stats?.rank || null
                     };
                 }
             } catch (error) {
@@ -286,10 +290,13 @@ io.on('connection', (socket) => {
             try {
                 const dbUser = await User.findById(user);
                 if (dbUser) {
+                    // Fetch player stats to get rank
+                    const stats = await StatsModel.getPlayerStats(dbUser.id);
                     userData = {
                         id: dbUser.id,
                         displayName: User.getDisplayName(dbUser),
-                        avatarUrl: dbUser.avatar_url
+                        avatarUrl: dbUser.avatar_url,
+                        rank: stats?.rank || null
                     };
                 }
             } catch (error) {
@@ -343,8 +350,14 @@ io.on('connection', (socket) => {
         const game = gameManager.getGameByPlayerId(socket.id);
         if (game) {
             console.log(`Player ${socket.id} trying to place piece from stack ${stackIndex} to ${row},${col}`);
+            const wasFinished = game.state === 'finished';
             if (game.place(socket.id, stackIndex, row, col)) {
                 io.to(game.id).emit('game_update', game.getGameState());
+
+                // Check for game end
+                if (!wasFinished && game.state === 'finished') {
+                    handleGameCompletion(game);
+                }
             } else {
                 console.log('Place failed');
             }
@@ -357,8 +370,14 @@ io.on('connection', (socket) => {
         const game = gameManager.getGameByPlayerId(socket.id);
         if (game) {
             console.log(`Player ${socket.id} trying to move from ${fromRow},${fromCol} to ${toRow},${toCol}`);
+            const wasFinished = game.state === 'finished';
             if (game.move(socket.id, fromRow, fromCol, toRow, toCol)) {
                 io.to(game.id).emit('game_update', game.getGameState());
+
+                // Check for game end
+                if (!wasFinished && game.state === 'finished') {
+                    handleGameCompletion(game);
+                }
             } else {
                 console.log('Move failed');
             }
@@ -406,6 +425,78 @@ io.on('connection', (socket) => {
             console.log(`Player ${socket.id} marked as disconnected in game ${game.id}`);
         }
     });
+});
+
+// Helper to handle game completion
+async function handleGameCompletion(game) {
+    try {
+        console.log(`Game ${game.id} finished. Winner: ${game.winner}`);
+
+        // Only record stats if we have two players and a valid result
+        if (game.players.length === 2) {
+            const p1 = game.players[0];
+            const p2 = game.players[1];
+
+            // We need user IDs to record stats. 
+            // If users are guests (no userId), we can't record stats for them.
+            // But we should try to record for authenticated users even if opponent is guest.
+
+            // However, our schema requires player_id to be a UUID from users table.
+            // So we can only record if the player is authenticated.
+
+            let durationSeconds = 0;
+            if (game.startTime) {
+                durationSeconds = Math.floor((Date.now() - game.startTime) / 1000);
+            }
+
+            // We'll use a slightly modified approach: check each player
+            if (p1.userId && p2.userId) {
+                // Both authenticated - record full game
+                await StatsModel.recordGame(game.id, p1.userId, p2.userId,
+                    game.winner === p1.color ? p1.userId : (game.winner === p2.color ? p2.userId : null),
+                    durationSeconds);
+            } else {
+                console.log('Skipping stats recording: one or both players are guests');
+            }
+        }
+    } catch (error) {
+        console.error('Error handling game completion:', error);
+    }
+}
+
+// Stats API Endpoints
+app.get('/api/stats/me', async (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const stats = await StatsModel.getPlayerStats(req.user.id);
+        const history = await StatsModel.getPlayerHistory(req.user.id);
+
+        res.json({
+            stats: stats || {
+                wins: 0, losses: 0, draws: 0, total_games: 0, rank_score: 0, rank: '-'
+            },
+            history
+        });
+    } catch (error) {
+        console.error('Error fetching user stats:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/rankings', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = parseInt(req.query.offset) || 0;
+
+        const rankings = await StatsModel.getLeaderboard(limit, offset);
+        res.json(rankings);
+    } catch (error) {
+        console.error('Error fetching rankings:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Catch-all route for client-side routing (must be last)
