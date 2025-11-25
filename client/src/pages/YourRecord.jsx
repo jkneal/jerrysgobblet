@@ -124,7 +124,10 @@ const YourRecord = () => {
                                 <div key={game.id} className={`history-item ${game.result}`}>
                                     <div className="game-result">
                                         <span className="result-badge">{game.result.toUpperCase()}</span>
-                                        <span className="game-date">{formatDate(game.played_at)}</span>
+                                        <div className="game-meta">
+                                            <span className="game-date">{formatDate(game.played_at)}</span>
+                                            <span className="game-duration">{formatDuration(game.duration_seconds)}</span>
+                                        </div>
                                     </div>
                                     <div className="opponent-info">
                                         <span className="vs-label">vs</span>
@@ -136,9 +139,6 @@ const YourRecord = () => {
                                                 {game.opponent_name || 'Guest'}
                                             </span>
                                         </div>
-                                    </div>
-                                    <div className="game-duration">
-                                        {formatDuration(game.duration_seconds)}
                                     </div>
                                 </div>
                             ))
