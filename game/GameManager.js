@@ -3,8 +3,9 @@ const GameModel = require('../models/GameModel');
 const { v4: uuidv4 } = require('uuid');
 
 class GameManager {
-    constructor() {
+    constructor(maxGames = 1000) {
         this.games = new Map();
+        this.maxGames = maxGames;
         this.startCleanupInterval();
     }
 
@@ -47,10 +48,15 @@ class GameManager {
         return newGame;
     }
 
-    createGame(playerId, preferredColor) {
+    createGame(playerId, preferredColor, userData = null) {
+        // Check memory limit before creating
+        if (!this.enforceMemoryLimit()) {
+            throw new Error('Server at capacity. Please try again in a moment.');
+        }
+
         const game = new GobletGame(uuidv4());
         if (playerId) {
-            game.addPlayer(playerId, preferredColor);
+            game.addPlayer(playerId, preferredColor, userData);
         }
         this.games.set(game.id, game);
         return game;
@@ -143,6 +149,52 @@ class GameManager {
         if (removedCount > 0) {
             console.log(`Cleanup: Removed ${removedCount} abandoned games`);
         }
+    }
+
+    findOldestFinishedGame() {
+        let oldestGame = null;
+        let oldestTime = Date.now();
+
+        for (const [id, game] of this.games.entries()) {
+            if (game.state === 'finished') {
+                const lastActivity = game.getLastActivity();
+                if (lastActivity < oldestTime) {
+                    oldestTime = lastActivity;
+                    oldestGame = game;
+                }
+            }
+        }
+
+        return oldestGame;
+    }
+
+    enforceMemoryLimit() {
+        if (this.games.size >= this.maxGames) {
+            console.log(`Memory limit reached (${this.games.size}/${this.maxGames}), removing oldest finished game`);
+            const oldestFinished = this.findOldestFinishedGame();
+            if (oldestFinished) {
+                this.removeGame(oldestFinished.id);
+                console.log(`Removed finished game ${oldestFinished.id} to make room`);
+                return true;
+            } else {
+                console.warn(`At memory limit but no finished games to remove`);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    getMetrics() {
+        const games = Array.from(this.games.values());
+        return {
+            totalGames: this.games.size,
+            maxGames: this.maxGames,
+            utilizationPercent: Math.round((this.games.size / this.maxGames) * 100),
+            waitingGames: games.filter(g => g.state === 'waiting').length,
+            playingGames: games.filter(g => g.state === 'playing').length,
+            finishedGames: games.filter(g => g.state === 'finished').length,
+            totalPlayers: games.reduce((sum, g) => sum + g.players.length, 0)
+        };
     }
 }
 

@@ -201,14 +201,14 @@ io.on('connection', (socket) => {
 
     console.log('A user connected:', socket.id, user ? `(User ID: ${user})` : '(Not authenticated)');
 
-    socket.on('join_game', async ({ color, gameId } = {}) => {
+    // Create a new game
+    socket.on('create_game', async ({ color } = {}) => {
         // Get user data if authenticated
         let userData = null;
         if (user) {
             try {
                 const dbUser = await User.findById(user);
                 if (dbUser) {
-                    // Fetch player stats to get rank
                     const stats = await StatsModel.getPlayerStats(dbUser.id);
                     userData = {
                         id: dbUser.id,
@@ -222,32 +222,15 @@ io.on('connection', (socket) => {
             }
         }
 
-        let game;
+        // Create new game
+        try {
+            const game = gameManager.createGame(socket.id, color, userData);
+            game.setPlayerConnected(socket.id, true);
 
-        // If gameId is provided, try to join that specific game
-        if (gameId) {
-            game = gameManager.getGame(gameId);
-            if (game && game.state === 'waiting' && game.players.length < 2) {
-                game.addPlayer(socket.id, color, userData);
-                game.setPlayerConnected(socket.id, true);
-            } else {
-                console.log(`Game ${gameId} not available for joining`);
-                // Fall back to matchmaking
-                game = gameManager.findGameForPlayer(socket.id, color, userData);
-            }
-        } else {
-            // Use matchmaking to find or create a game
-            game = gameManager.findGameForPlayer(socket.id, color, userData);
-            if (game) {
-                game.setPlayerConnected(socket.id, true);
-            }
-        }
-
-        if (game) {
             socket.join(game.id);
-            console.log(`Player ${socket.id} joined game ${game.id} with color ${color}`);
+            console.log(`Player ${socket.id} created game ${game.id} with color ${color}`);
 
-            // Store game info in session for reconnection
+            // Store game info in session
             if (socket.request.session) {
                 if (!socket.request.session.activeGames) {
                     socket.request.session.activeGames = {};
@@ -257,6 +240,91 @@ io.on('connection', (socket) => {
             }
 
             io.to(game.id).emit('game_update', game.getGameState());
+        } catch (error) {
+            console.error('Error creating game:', error);
+            socket.emit('game_error', {
+                message: error.message || 'Failed to create game',
+                shouldReturnToLobby: true
+            });
+        }
+    });
+
+    // Join an existing game by gameId
+    socket.on('join_game', async ({ color, gameId } = {}) => {
+        if (!gameId) {
+            socket.emit('game_error', {
+                message: 'Game ID is required to join a game',
+                shouldReturnToLobby: true
+            });
+            return;
+        }
+
+        // Get user data if authenticated
+        let userData = null;
+        if (user) {
+            try {
+                const dbUser = await User.findById(user);
+                if (dbUser) {
+                    const stats = await StatsModel.getPlayerStats(dbUser.id);
+                    userData = {
+                        id: dbUser.id,
+                        displayName: User.getDisplayName(dbUser),
+                        avatarUrl: dbUser.avatar_url,
+                        rank: stats?.rank || null
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        }
+
+        const game = gameManager.getGame(gameId);
+
+        if (!game) {
+            socket.emit('game_error', {
+                message: 'Game not found',
+                shouldReturnToLobby: true
+            });
+            return;
+        }
+
+        if (game.state !== 'waiting') {
+            socket.emit('game_error', {
+                message: 'Game has already started',
+                shouldReturnToLobby: true
+            });
+            return;
+        }
+
+        if (game.players.length >= 2) {
+            socket.emit('game_error', {
+                message: 'Game is full',
+                shouldReturnToLobby: true
+            });
+            return;
+        }
+
+        // Add player to game
+        if (game.addPlayer(socket.id, color, userData)) {
+            game.setPlayerConnected(socket.id, true);
+            socket.join(game.id);
+            console.log(`Player ${socket.id} joined game ${game.id} with color ${color}`);
+
+            // Store game info in session
+            if (socket.request.session) {
+                if (!socket.request.session.activeGames) {
+                    socket.request.session.activeGames = {};
+                }
+                socket.request.session.activeGames[game.id] = color;
+                socket.request.session.save();
+            }
+
+            io.to(game.id).emit('game_update', game.getGameState());
+        } else {
+            socket.emit('game_error', {
+                message: 'Failed to join game',
+                shouldReturnToLobby: true
+            });
         }
     });
 
@@ -484,6 +552,16 @@ app.get('/api/stats/me', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching user stats:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/metrics', (req, res) => {
+    try {
+        const metrics = gameManager.getMetrics();
+        res.json(metrics);
+    } catch (error) {
+        console.error('Error fetching metrics:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
