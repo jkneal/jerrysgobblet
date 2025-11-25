@@ -1708,10 +1708,13 @@ h1 {
 
   .profile-page {
     max-width: 90vw;
+    margin: 0 auto;
   }
 
   .profile-content {
     padding: 1rem;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 
