@@ -84,6 +84,7 @@ const HowToPlay = () => {
                         <ul>
                             <li><strong>Select:</strong> Plays when you click a piece</li>
                             <li><strong>Place:</strong> Plays when you place or move a piece</li>
+                            <li><strong>Gobble:</strong> Plays when you gobble an opponent piece</li>
                             <li><strong>Opponent:</strong> Plays when your opponent makes a move</li>
                             <li><strong>Victory:</strong> Plays when the game ends</li>
                         </ul>
