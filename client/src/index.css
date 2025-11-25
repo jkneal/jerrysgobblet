@@ -1313,6 +1313,7 @@ h1 {
   height: 20px;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
 .join-game-btn {
