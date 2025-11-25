@@ -19,7 +19,6 @@ import useSound from '../hooks/useSound';
 
 const GameRoom = () => {
     const location = useLocation();
-    const navigate = useNavigate();
     const playerColor = location.state?.color || '#ffd700'; // Default to gold
     const gameId = location.state?.gameId; // Optional: join specific game
 
@@ -33,6 +32,21 @@ const GameRoom = () => {
     const gameIdRef = useRef(null); // To store the current game ID
     const previousTurnRef = useRef(null); // Track previous turn for opponent sound
     const victoryPlayedRef = useRef(false); // Track if victory music has been played
+    const originalNavigate = useNavigate();
+
+    // Wrap navigate to show confirmation for active games
+    const navigate = (...args) => {
+        const isGameActive = gameState?.state === 'playing' && !gameState?.winner;
+        if (isGameActive) {
+            const confirmed = window.confirm(
+                'You have an active game in progress. Leaving will disconnect you from the game. Are you sure you want to leave?'
+            );
+            if (!confirmed) {
+                return; // Don't navigate
+            }
+        }
+        originalNavigate(...args);
+    };
 
     const { playSound, stopSound, stopAllSounds } = useSound();
 
@@ -108,18 +122,16 @@ const GameRoom = () => {
         return () => {
             stopAllSounds();
             newSocket.disconnect();
-        };
-    }, [playerColor, gameId]);
-
-    // Clear stored gameId when leaving the page
-    useEffect(() => {
-        return () => {
-            // Only clear if game is finished
-            if (gameState?.state === 'finished') {
+            // Clear stored gameId when leaving the component
+            // unless it's just a page refresh (which would immediately reload)
+            const isPageRefresh = performance.navigation?.type === 1;
+            if (!isPageRefresh) {
                 localStorage.removeItem('currentGameId');
             }
         };
-    }, [gameState?.state]);
+    }, [playerColor, gameId, stopAllSounds]);
+
+
 
     // Play victory music when game ends
     useEffect(() => {
