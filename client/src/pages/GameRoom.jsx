@@ -224,8 +224,10 @@ const GameRoom = () => {
         if (gameState.turn !== playerId) return;
 
         if (selection && selection.type === 'hand') {
-            // Place piece
-            playSound('place');
+            // Place piece - check if gobbling
+            const targetStack = gameState.board[row][col];
+            const isGobbling = targetStack.length > 0;
+            playSound(isGobbling ? 'gobble' : 'place');
             socket.emit('place_piece', {
                 stackIndex: selection.stackIndex,
                 row,
@@ -238,7 +240,10 @@ const GameRoom = () => {
                 setSelection(null); // Deselect if clicking same cell
                 return;
             }
-            playSound('place');
+            // Check if gobbling
+            const targetStack = gameState.board[row][col];
+            const isGobbling = targetStack.length > 0;
+            playSound(isGobbling ? 'gobble' : 'place');
             socket.emit('move_piece', {
                 fromRow: selection.row,
                 fromCol: selection.col,
