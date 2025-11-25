@@ -61,7 +61,12 @@ const ColorPreferences = () => {
 
     const handleContinue = () => {
         // Pass the hex value and optional gameId
-        navigate('/play', { state: { color: selectedColor.hex, gameId } });
+        // Use replace: true to remove ColorPreferences from history
+        // so back button from game goes to lobby
+        navigate('/play', {
+            state: { color: selectedColor.hex, gameId },
+            replace: true
+        });
     };
 
     const isColorDisabled = (colorHex) => {

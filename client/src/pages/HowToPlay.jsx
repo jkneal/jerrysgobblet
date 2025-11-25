@@ -197,13 +197,7 @@ const HowToPlay = () => {
                 </div>
             )}
 
-            <button className="back-btn" onClick={() => {
-                try {
-                    navigate('/');
-                } catch (err) {
-                    window.location.href = '/';
-                }
-            }}>Back to Home</button>
+            <button className="back-btn" onClick={() => window.location.href = '/'}>Back to Home</button>
         </div>
     );
 };

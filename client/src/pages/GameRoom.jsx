@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useBlocker } from 'react-router-dom';
 import GameBoard from '../components/GameBoard';
 import PlayerHand from '../components/PlayerHand';
 import ChatPanel from '../components/ChatPanel';
@@ -49,7 +49,7 @@ const GameRoom = () => {
             playerIdRef.current = newSocket.id;
 
             // Check if we have a stored gameId (from page refresh)
-            const storedGameId = sessionStorage.getItem('currentGameId');
+            const storedGameId = localStorage.getItem('currentGameId');
 
             // Priority: use gameId from navigation state, otherwise try stored gameId
             if (gameId) {
@@ -57,7 +57,7 @@ const GameRoom = () => {
                 console.log('Joining game:', gameId);
                 newSocket.emit('join_game', { color: playerColor, gameId });
                 // Update stored gameId
-                sessionStorage.setItem('currentGameId', gameId);
+                localStorage.setItem('currentGameId', gameId);
             } else if (storedGameId) {
                 // Attempt to rejoin the stored game (page refresh)
                 console.log('Attempting to rejoin game:', storedGameId);
@@ -87,7 +87,7 @@ const GameRoom = () => {
             // Store gameId for reconnection
             if (state.id) {
                 gameIdRef.current = state.id;
-                sessionStorage.setItem('currentGameId', state.id);
+                localStorage.setItem('currentGameId', state.id);
             }
         });
 
@@ -96,9 +96,9 @@ const GameRoom = () => {
 
             // Only clear and redirect if it's a "Game not found" or "Not a player" error
             // and we were trying to rejoin
-            const storedGameId = sessionStorage.getItem('currentGameId');
+            const storedGameId = localStorage.getItem('currentGameId');
             if (storedGameId && (error.message === 'Game not found' || error.message === 'You are not a player in this game')) {
-                sessionStorage.removeItem('currentGameId');
+                localStorage.removeItem('currentGameId');
                 navigate('/lobby');
             }
         });
@@ -116,7 +116,7 @@ const GameRoom = () => {
         return () => {
             // Only clear if game is finished
             if (gameState?.state === 'finished') {
-                sessionStorage.removeItem('currentGameId');
+                localStorage.removeItem('currentGameId');
             }
         };
     }, [gameState?.state]);
@@ -148,10 +148,46 @@ const GameRoom = () => {
             if (socket.connected) {
                 socket.emit('player_heartbeat');
             }
-        }, 30000); // Every 30 seconds
+        }, 5000); // Every 5 seconds (must be less than 10s cleanup threshold)
 
         return () => clearInterval(heartbeatInterval);
     }, [socket]);
+
+    // Block navigation if game is in progress
+    const shouldBlockNavigation = gameState?.state === 'playing' && !gameState?.winner;
+
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            shouldBlockNavigation &&
+            currentLocation.pathname !== nextLocation.pathname
+    );
+
+    // Handle browser back/forward/close
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (shouldBlockNavigation) {
+                e.preventDefault();
+                e.returnValue = ''; // Chrome requires returnValue to be set
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [shouldBlockNavigation]);
+
+    // Show confirmation dialog when navigation is blocked
+    useEffect(() => {
+        if (blocker.state === 'blocked') {
+            const leave = window.confirm(
+                'You have an active game in progress. Leaving will disconnect you from the game. Are you sure you want to leave?'
+            );
+            if (leave) {
+                blocker.proceed();
+            } else {
+                blocker.reset();
+            }
+        }
+    }, [blocker]);
 
 
 
