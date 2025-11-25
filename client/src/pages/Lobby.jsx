@@ -103,7 +103,7 @@ const Lobby = () => {
                                                         className="color-indicator"
                                                         style={{ backgroundColor: game.players[0].color }}
                                                     />
-                                                    <span>Playing as {getDisplayColor(game.players[0].color)}</span>
+                                                    <span>{getDisplayColor(game.players[0].color)}</span>
                                                 </div>
                                             </div>
                                         </div>
