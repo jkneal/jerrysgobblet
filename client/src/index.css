@@ -1723,6 +1723,15 @@ h1 {
   .action-btn {
     font-size: 3vmin;
   }
+
+  .info-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .info-row label {
+    min-width: unset;
+  }
 }
 
 /* ===== HOW TO PLAY STYLES ===== */
