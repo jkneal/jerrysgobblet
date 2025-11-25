@@ -22,6 +22,9 @@ app.use(cors({
     credentials: true
 }));
 
+// Trust proxy - required for secure cookies behind Render's load balancer
+app.set('trust proxy', 1);
+
 // Session configuration
 const sessionMiddleware = session({
     store: new pgSession({
@@ -59,17 +62,18 @@ app.get('/auth/google',
 
 // Google OAuth callback
 app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: process.env.CLIENT_URL || 'http://localhost:5173' }),
+    passport.authenticate('google', { failureRedirect: '/' }),
     (req, res) => {
         // Explicitly save session before redirect to ensure cookie is set
         req.session.save((err) => {
             if (err) {
                 console.error('Session save error:', err);
-                return res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
+                return res.redirect('/');
             }
             console.log('User logged in:', req.user.email);
-            // Successful authentication, redirect to client
-            res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
+            console.log('Session ID:', req.sessionID);
+            // Successful authentication, redirect to home
+            res.redirect('/');
         });
     }
 );
