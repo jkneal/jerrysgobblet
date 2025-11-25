@@ -2,6 +2,7 @@ services:
   # Combined Backend + Frontend service
   - type: web
     name: jerrysgobblet
+    region: ohio
     env: node
     buildCommand: |
       npm install
