@@ -17,7 +17,7 @@ const Lobby = () => {
 
     const fetchGames = async () => {
         try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
 
             // Fetch waiting games
             const waitingResponse = await fetch(`${backendUrl}/api/games/waiting`, {

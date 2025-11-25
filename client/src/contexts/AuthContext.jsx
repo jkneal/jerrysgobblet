@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
             const response = await fetch(`${backendUrl}/auth/user`, {
                 credentials: 'include'
             });
@@ -33,13 +33,13 @@ export const AuthProvider = ({ children }) => {
     };
 
     const login = () => {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
         window.location.href = `${backendUrl}/auth/google`;
     };
 
     const logout = async () => {
         try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
             await fetch(`${backendUrl}/auth/logout`, {
                 credentials: 'include'
             });
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
     const updateProfile = async (profileData) => {
         try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
             const response = await fetch(`${backendUrl}/api/profile`, {
                 method: 'PUT',
                 headers: {

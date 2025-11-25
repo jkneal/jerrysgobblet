@@ -39,7 +39,7 @@ const GameRoom = () => {
 
     // Initialize socket connection
     useEffect(() => {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
         const newSocket = io(backendUrl, {
             withCredentials: true
         });
