@@ -125,8 +125,14 @@ class GobletGame {
         this.board = Array(4).fill(null).map(() => Array(4).fill(null).map(() => []));
         this.winner = null;
 
-        // Reset turn to first player if exists
-        if (this.players.length > 0) {
+        // Swap player order to alternate who goes first
+        if (this.players.length === 2) {
+            this.players.reverse();
+            console.log(`Players swapped for new game. ${this.players[0].displayName || this.players[0].color} will go first.`);
+        }
+
+        // Set turn to first player if we have 2 players
+        if (this.players.length === 2) {
             this.turn = this.players[0].id;
         } else {
             this.turn = null;
@@ -147,6 +153,9 @@ class GobletGame {
 
         // Clear winning line
         this.winningLine = null;
+
+        // Reset start time for new game
+        this.startTime = Date.now();
 
         // Save to database
         this.saveToDatabase();
