@@ -269,6 +269,7 @@ h1 {
 .player-hand.current-player {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 2vmin;
 }
 
 /* Opponent's hand - no interaction */
@@ -1092,6 +1093,7 @@ h1 {
   border-radius: 8px;
   color: white;
   font-size: 1rem;
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
@@ -1683,9 +1685,33 @@ h1 {
   }
 
   .chat-toggle-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    bottom: 15px;
+    left: 15px;
+  }
+
+  .game-over-footer {
+    max-width: 90vw;
+    padding: 2vmin;
+  }
+
+  .game-over-actions.inline {
+    flex-direction: column;
+    gap: 1vmin;
+  }
+
+  .game-over-actions.inline .action-btn {
+    width: 100%;
+  }
+
+  .profile-page {
+    max-width: 90vw;
+  }
+
+  .profile-content {
+    padding: 1rem;
   }
 }
 
