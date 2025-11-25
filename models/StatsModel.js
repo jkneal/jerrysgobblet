@@ -75,11 +75,13 @@ class StatsModel {
     // Get stats for a specific player
     static async getPlayerStats(userId) {
         const result = await pool.query(
-            `SELECT ps.*, u.nickname, u.first_name, u.last_name, u.avatar_url,
-             (SELECT COUNT(*) + 1 FROM player_stats WHERE rank_score > ps.rank_score) as rank
-             FROM player_stats ps
-             JOIN users u ON ps.user_id = u.id
-             WHERE ps.user_id = $1`,
+            `WITH ranked_stats AS (
+                SELECT ps.*, u.nickname, u.first_name, u.last_name, u.avatar_url,
+                       DENSE_RANK() OVER (ORDER BY ps.rank_score DESC) as rank
+                FROM player_stats ps
+                JOIN users u ON ps.user_id = u.id
+             )
+             SELECT * FROM ranked_stats WHERE user_id = $1`,
             [userId]
         );
         return result.rows[0];

@@ -471,8 +471,10 @@ app.get('/api/stats/me', async (req, res) => {
     }
 
     try {
-        const stats = await StatsModel.getPlayerStats(req.user.id);
-        const history = await StatsModel.getPlayerHistory(req.user.id);
+        const [stats, history] = await Promise.all([
+            StatsModel.getPlayerStats(req.user.id),
+            StatsModel.getPlayerHistory(req.user.id)
+        ]);
 
         res.json({
             stats: stats || {
