@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
-import { useLocation, useNavigate, useBlocker } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import GameBoard from '../components/GameBoard';
 import PlayerHand from '../components/PlayerHand';
 import ChatPanel from '../components/ChatPanel';
@@ -153,41 +153,26 @@ const GameRoom = () => {
         return () => clearInterval(heartbeatInterval);
     }, [socket]);
 
-    // Block navigation if game is in progress
-    const shouldBlockNavigation = gameState?.state === 'playing' && !gameState?.winner;
-
-    const blocker = useBlocker(
-        ({ currentLocation, nextLocation }) =>
-            shouldBlockNavigation &&
-            currentLocation.pathname !== nextLocation.pathname
-    );
-
-    // Handle browser back/forward/close
+    // Warn user before leaving active game
     useEffect(() => {
+        const shouldWarn = gameState?.state === 'playing' && !gameState?.winner;
+
         const handleBeforeUnload = (e) => {
-            if (shouldBlockNavigation) {
+            if (shouldWarn) {
                 e.preventDefault();
                 e.returnValue = ''; // Chrome requires returnValue to be set
+                return '';
             }
         };
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [shouldBlockNavigation]);
-
-    // Show confirmation dialog when navigation is blocked
-    useEffect(() => {
-        if (blocker.state === 'blocked') {
-            const leave = window.confirm(
-                'You have an active game in progress. Leaving will disconnect you from the game. Are you sure you want to leave?'
-            );
-            if (leave) {
-                blocker.proceed();
-            } else {
-                blocker.reset();
-            }
+        if (shouldWarn) {
+            window.addEventListener('beforeunload', handleBeforeUnload);
         }
-    }, [blocker]);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [gameState?.state, gameState?.winner]);
 
 
 
