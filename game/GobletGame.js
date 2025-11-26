@@ -1,7 +1,7 @@
 const GameModel = require('../models/GameModel');
 
 class GobletGame {
-    constructor(id) {
+    constructor(id, isPublic = true, joinCode = null) {
         this.id = id;
         this.players = []; // { id: socketId, userId: dbUserId, color: hex, displayName: string, avatarUrl: string }
         // 4x4 grid, each cell is a stack of pieces. 
@@ -10,6 +10,10 @@ class GobletGame {
         this.turn = null;
         this.state = 'waiting'; // waiting, playing, finished
         this.winner = null;
+
+        // Privacy settings
+        this.isPublic = isPublic; // Public games appear in lobby
+        this.joinCode = joinCode; // 3-digit code for private games
 
         // Initial hands: 3 stacks of [1, 2, 3, 4] for each player
         // We track available pieces. Since they must be played in order (largest first usually, 
@@ -428,7 +432,9 @@ class GobletGame {
             winner: this.winner,
             playerHands: this.playerHands, // Frontend needs to know available pieces
             lastMove: this.lastMove, // For highlighting opponent moves
-            winningLine: this.winningLine // For highlighting winning cells
+            winningLine: this.winningLine, // For highlighting winning cells
+            isPublic: this.isPublic, // Privacy setting
+            joinCode: this.joinCode // Join code for private games
         };
     }
 }

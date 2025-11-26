@@ -64,7 +64,13 @@ const ColorPreferences = () => {
         // Use replace: true to remove ColorPreferences from history
         // so back button from game goes to lobby
         navigate('/play', {
-            state: { color: selectedColor.hex, gameId },
+            state: {
+                color: selectedColor.hex,
+                gameId,
+                // Pass privacy options from previous screen
+                isPublic: location.state?.isPublic,
+                requestJoinCode: location.state?.requestJoinCode
+            },
             replace: true
         });
     };

@@ -48,18 +48,50 @@ class GameManager {
         return newGame;
     }
 
-    createGame(playerId, preferredColor, userData = null) {
+    createGame(playerId, preferredColor, userData = null, isPublic = true, requestJoinCode = false) {
         // Check memory limit before creating
         if (!this.enforceMemoryLimit()) {
             throw new Error('Server at capacity. Please try again in a moment.');
         }
 
-        const game = new GobletGame(uuidv4());
+        // Generate join code if private game requested
+        const joinCode = requestJoinCode ? this.generateJoinCode() : null;
+
+        const game = new GobletGame(uuidv4(), isPublic, joinCode);
         if (playerId) {
             game.addPlayer(playerId, preferredColor, userData);
         }
         this.games.set(game.id, game);
         return game;
+    }
+
+    // Generate a unique 3-digit join code
+    generateJoinCode() {
+        let code;
+        let attempts = 0;
+        const maxAttempts = 1000;
+
+        do {
+            // Generate random 3-digit code (000-999)
+            code = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            attempts++;
+
+            if (attempts >= maxAttempts) {
+                throw new Error('Unable to generate unique join code');
+            }
+        } while (this.getGameByJoinCode(code));
+
+        return code;
+    }
+
+    // Find game by join code
+    getGameByJoinCode(code) {
+        for (const game of this.games.values()) {
+            if (game.joinCode === code && game.state === 'waiting') {
+                return game;
+            }
+        }
+        return null;
     }
 
     getGameByPlayerId(playerId) {

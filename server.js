@@ -125,12 +125,13 @@ app.put('/api/profile', async (req, res) => {
     }
 });
 
-// Get waiting games for lobby
+// Get waiting games for lobby (only public games)
 app.get('/api/games/waiting', (req, res) => {
     const waitingGames = [];
 
     for (const game of gameManager.games.values()) {
-        if (game.state === 'waiting' && game.players.length === 1) {
+        // Only show public games with one player waiting
+        if (game.state === 'waiting' && game.players.length === 1 && game.isPublic) {
             waitingGames.push({
                 id: game.id,
                 players: game.players.map(p => ({
@@ -138,6 +139,7 @@ app.get('/api/games/waiting', (req, res) => {
                     avatarUrl: p.avatarUrl,
                     color: p.color
                 }))
+                // Don't include joinCode in public listing
             });
         }
     }
@@ -163,6 +165,27 @@ app.get('/api/games/:gameId', (req, res) => {
             color: p.color
         }))
     });
+});
+
+// Join game by join code
+app.post('/api/games/join-by-code', (req, res) => {
+    const { joinCode } = req.body;
+
+    if (!joinCode || joinCode.length !== 3) {
+        return res.status(400).json({ error: 'Invalid join code format' });
+    }
+
+    const game = gameManager.getGameByJoinCode(joinCode);
+
+    if (!game) {
+        return res.status(404).json({ error: 'No game found with that code' });
+    }
+
+    if (game.players.length >= 2) {
+        return res.status(400).json({ error: 'Game is full' });
+    }
+
+    res.json({ gameId: game.id });
 });
 
 // Get active games for authenticated user
@@ -202,7 +225,7 @@ io.on('connection', (socket) => {
     console.log('A user connected:', socket.id, user ? `(User ID: ${user})` : '(Not authenticated)');
 
     // Create a new game
-    socket.on('create_game', async ({ color } = {}) => {
+    socket.on('create_game', async ({ color, isPublic = true, requestJoinCode = false } = {}) => {
         // Get user data if authenticated
         let userData = null;
         if (user) {
@@ -224,11 +247,11 @@ io.on('connection', (socket) => {
 
         // Create new game
         try {
-            const game = gameManager.createGame(socket.id, color, userData);
+            const game = gameManager.createGame(socket.id, color, userData, isPublic, requestJoinCode);
             game.setPlayerConnected(socket.id, true);
 
             socket.join(game.id);
-            console.log(`Player ${socket.id} created game ${game.id} with color ${color}`);
+            console.log(`Player ${socket.id} created game ${game.id} with color ${color}, public: ${isPublic}, joinCode: ${game.joinCode || 'none'}`);
 
             // Store game info in session
             if (socket.request.session) {
@@ -395,6 +418,18 @@ io.on('connection', (socket) => {
             // Update connection status before changing ID (if needed, but ID change handles it)
             // Actually we need to update the ID first so setPlayerConnected finds the right player?
             // No, setPlayerConnected uses the ID. If we change the ID, we should use the new one.
+
+            // Robust turn update: Check if it's this player's turn by ID OR by Color
+            // This handles cases where IDs might be out of sync but the turn belongs to this player's color
+            const turnPlayer = game.players.find(p => p.id === game.turn);
+            const isMyTurn = (turnPlayer && turnPlayer.color === player.color) || game.turn === player.id;
+
+            console.log(`Rejoin debug: game.turn=${game.turn}, player.id=${player.id}, turnPlayer=${turnPlayer?.id}, isMyTurn=${isMyTurn}`);
+
+            if (isMyTurn) {
+                console.log(`Updating turn from ${game.turn} to ${socket.id}`);
+                game.turn = socket.id;
+            }
 
             player.id = socket.id;
             game.setPlayerConnected(socket.id, true);

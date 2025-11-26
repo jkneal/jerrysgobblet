@@ -9,6 +9,8 @@ import Profile from './pages/Profile';
 import YourRecord from './pages/YourRecord';
 import './App.css';
 
+import GamePrivacy from './pages/GamePrivacy';
+
 function App() {
   return (
     <AuthProvider>
@@ -16,6 +18,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/how-to-play" element={<HowToPlay />} />
         <Route path="/lobby" element={<Lobby />} />
+        <Route path="/game-privacy" element={<GamePrivacy />} />
         <Route path="/color-preferences" element={<ColorPreferences />} />
         <Route path="/play" element={<GameRoom />} />
         <Route path="/profile" element={<Profile />} />

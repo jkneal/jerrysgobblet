@@ -103,7 +103,13 @@ const GameRoom = () => {
             } else {
                 // Create a new game
                 console.log('Creating new game with color:', playerColor);
-                newSocket.emit('create_game', { color: playerColor });
+                const isPublic = location.state?.isPublic;
+                const requestJoinCode = location.state?.requestJoinCode;
+                newSocket.emit('create_game', {
+                    color: playerColor,
+                    isPublic: isPublic !== undefined ? isPublic : true,
+                    requestJoinCode: !!requestJoinCode
+                });
             }
         });
 
@@ -428,6 +434,37 @@ const GameRoom = () => {
                     style={{ backgroundColor: getStatusBadgeColor() }}
                 >
                     {getStatusMessage()}
+                </div>
+            )}
+
+            {gameState.state === 'waiting' && (
+                <div className="waiting-screen">
+                    <h2>Waiting for Opponent...</h2>
+
+                    {gameState.joinCode && (
+                        <div className="join-code-display">
+                            <p>Share this code with your friend:</p>
+                            <div className="code-box">
+                                <span className="code">{gameState.joinCode}</span>
+                                <button
+                                    className="copy-btn"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(gameState.joinCode);
+                                        // Could add a toast notification here
+                                    }}
+                                >
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="waiting-animation">
+                        <div className="piece-stack">
+                            <div className="piece size-4" style={{ backgroundColor: myPlayerColor }}></div>
+                        </div>
+                    </div>
+                    <p>Invite a friend to join!</p>
                 </div>
             )}
 

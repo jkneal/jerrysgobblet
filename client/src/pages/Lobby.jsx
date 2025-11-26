@@ -7,6 +7,8 @@ const Lobby = () => {
     const { user } = useAuth();
     const [waitingGames, setWaitingGames] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [joinCode, setJoinCode] = useState('');
+    const [joinError, setJoinError] = useState('');
 
     useEffect(() => {
         fetchGames();
@@ -43,7 +45,40 @@ const Lobby = () => {
     const handleCreateGame = () => {
         // Clear any stored game ID to ensure we start a new one
         localStorage.removeItem('currentGameId');
-        navigate('/color-preferences');
+        navigate('/game-privacy');
+    };
+
+    const handleJoinByCode = async (e) => {
+        e.preventDefault();
+        setJoinError('');
+
+        if (!joinCode || joinCode.length !== 3) {
+            setJoinError('Please enter a valid 3-digit code');
+            return;
+        }
+
+        try {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
+            const response = await fetch(`${backendUrl}/api/games/join-by-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ joinCode }),
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                handleJoinGame(data.gameId);
+            } else {
+                const error = await response.json();
+                setJoinError(error.error || 'Failed to join game');
+            }
+        } catch (error) {
+            console.error('Error joining by code:', error);
+            setJoinError('Network error. Please try again.');
+        }
     };
 
     const COLOR_NAMES = {
@@ -124,6 +159,22 @@ const Lobby = () => {
                             <span className="plus-icon">+</span>
                             Create New Game
                         </button>
+                    </div>
+
+                    <div className="join-code-section">
+                        <h3>Have a Join Code?</h3>
+                        <form onSubmit={handleJoinByCode} className="join-code-form">
+                            <input
+                                type="text"
+                                maxLength="3"
+                                placeholder="000"
+                                value={joinCode}
+                                onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, ''))}
+                                className="join-code-input"
+                            />
+                            <button type="submit" className="join-code-btn">Join</button>
+                        </form>
+                        {joinError && <div className="join-error">{joinError}</div>}
                     </div>
                 </>
             )}
