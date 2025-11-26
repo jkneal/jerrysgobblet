@@ -24,7 +24,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background: radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #0a1f0f 0%, #1a3a1f 25%, #0d2818 50%, #050f08 100%);
   color: var(--text-color);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
