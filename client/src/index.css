@@ -2137,13 +2137,13 @@ h1 {
 
   .leaderboard-header,
   .leaderboard-item {
-    grid-template-columns: 40px 1fr 60px;
-    font-size: 0.9rem;
+    grid-template-columns: 40px 1fr 50px 55px;
+    font-size: 0.85rem;
+    padding: 0.75rem 0.5rem;
   }
 
-  .ratio-col,
-  .leaderboard-header span:last-child {
-    display: none;
+  .leaderboard-header {
+    font-size: 0.75rem;
   }
 
   .history-item {
