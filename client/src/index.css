@@ -1247,6 +1247,8 @@ h1 {
   z-index: 2;
   border-color: #ffd700;
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.4);
+  perspective: 1000px;
+  /* Enable 3D perspective for flip effect */
 }
 
 @keyframes winningPulse {
@@ -1267,26 +1269,67 @@ h1 {
 }
 
 .winning-cell .piece {
-  animation: winningDance 1s ease-in-out infinite;
+  animation: winningDanceFlip 4s ease-in-out infinite;
 }
 
-@keyframes winningDance {
+/* Alternating delays for each winning piece */
+.winning-cell-0 .piece {
+  animation-delay: 0s;
+}
 
-  0%,
-  100% {
-    transform: translate(-50%, -50%) rotate(0deg);
+.winning-cell-1 .piece {
+  animation-delay: 0.3s;
+}
+
+.winning-cell-2 .piece {
+  animation-delay: 0.6s;
+}
+
+.winning-cell-3 .piece {
+  animation-delay: 0.9s;
+}
+
+@keyframes winningDanceFlip {
+
+  0% {
+    transform: translate(-50%, -50%) rotateX(0deg) rotate(0deg);
   }
 
-  25% {
-    transform: translate(-50%, -65%) rotate(-5deg);
+  10% {
+    transform: translate(-50%, -65%) rotateX(0deg) rotate(-5deg);
+  }
+
+  20% {
+    transform: translate(-50%, -50%) rotateX(0deg) rotate(0deg);
+  }
+
+  30% {
+    transform: translate(-50%, -65%) rotateX(0deg) rotate(5deg);
+  }
+
+  40% {
+    transform: translate(-50%, -50%) rotateX(0deg) rotate(0deg);
   }
 
   50% {
-    transform: translate(-50%, -50%) rotate(0deg);
+    transform: translate(-50%, -65%) rotateX(0deg) rotate(-5deg);
   }
 
-  75% {
-    transform: translate(-50%, -65%) rotate(5deg);
+  60% {
+    transform: translate(-50%, -50%) rotateX(0deg) rotate(0deg);
+  }
+
+  70% {
+    transform: translate(-50%, -65%) rotateX(0deg) rotate(5deg);
+  }
+
+  /* Quick flip at the end */
+  85% {
+    transform: translate(-50%, -50%) rotateX(180deg) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotateX(360deg) rotate(0deg);
   }
 }
 

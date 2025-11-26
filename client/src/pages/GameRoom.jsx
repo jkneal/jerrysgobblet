@@ -331,6 +331,7 @@ const GameRoom = () => {
         if (socket && socket.connected) {
             stopSound('victory');
             victoryPlayedRef.current = false;
+            setLastMove(null); // Clear last move highlighting
             socket.emit('reset_game');
         }
     };

@@ -66,12 +66,13 @@ const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, last
                         const topPiece = cell.length > 0 ? cell[cell.length - 1] : null;
                         const isOpponentPiece = topPiece && topPiece.color !== currentPlayer;
                         const isLastMove = lastMove && lastMove.toRow === rowIndex && lastMove.toCol === colIndex;
-                        const isWinningCell = winningLine && winningLine.some(cell => cell.r === rowIndex && cell.c === colIndex);
+                        const winningCellIndex = winningLine ? winningLine.findIndex(cell => cell.r === rowIndex && cell.c === colIndex) : -1;
+                        const isWinningCell = winningCellIndex !== -1;
 
                         return (
                             <div
                                 key={`${rowIndex}-${colIndex}`}
-                                className={`board-cell ${isSelected ? 'selected' : ''} ${isOpponentPiece ? 'opponent-piece' : ''} ${isLastMove ? 'last-move' : ''} ${isWinningCell ? 'winning-cell' : ''}`}
+                                className={`board-cell ${isSelected ? 'selected' : ''} ${isOpponentPiece ? 'opponent-piece' : ''} ${isLastMove ? 'last-move' : ''} ${isWinningCell ? `winning-cell winning-cell-${winningCellIndex}` : ''}`}
                                 onClick={() => onCellClick(rowIndex, colIndex)}
                             >
                                 {cell.length > 0 && (
