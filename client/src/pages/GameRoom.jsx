@@ -32,6 +32,7 @@ const GameRoom = () => {
     const gameIdRef = useRef(null); // To store the current game ID
     const previousTurnRef = useRef(null); // Track previous turn for opponent sound
     const victoryPlayedRef = useRef(false); // Track if victory music has been played
+    const previousBoardRef = useRef(null); // Track previous board state for sound effects
     const originalNavigate = useNavigate();
 
     // Wrap navigate to show confirmation for active games
@@ -117,6 +118,44 @@ const GameRoom = () => {
                 playSound('opponent');
             }
             previousTurnRef.current = state.turn;
+
+            // Play sound effects for successful moves (only for current player's moves)
+            if (previousBoardRef.current && state.turn !== playerId) {
+                // Turn changed, meaning our move was successful
+                const prevBoard = previousBoardRef.current;
+                const newBoard = state.board;
+
+                // Check if a piece was placed or moved
+                let foundChange = false;
+                let isGobbling = false;
+
+                for (let row = 0; row < 4; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        const prevStack = prevBoard[row][col];
+                        const newStack = newBoard[row][col];
+
+                        // If stack size increased or top piece changed, a move happened here
+                        if (newStack.length > prevStack.length ||
+                            (newStack.length > 0 && prevStack.length > 0 &&
+                                newStack[newStack.length - 1].id !== prevStack[prevStack.length - 1].id)) {
+                            foundChange = true;
+                            // Check if there was a piece underneath (gobbling)
+                            if (prevStack.length > 0) {
+                                isGobbling = true;
+                            }
+                            break;
+                        }
+                    }
+                    if (foundChange) break;
+                }
+
+                if (foundChange) {
+                    playSound(isGobbling ? 'gobble' : 'place');
+                }
+            }
+
+            // Store current board state for next comparison
+            previousBoardRef.current = state.board;
 
             setGameState(state);
             setSelection(null);
@@ -249,10 +288,7 @@ const GameRoom = () => {
         if (gameState.turn !== playerId) return;
 
         if (selection && selection.type === 'hand') {
-            // Place piece - check if gobbling
-            const targetStack = gameState.board[row][col];
-            const isGobbling = targetStack.length > 0;
-            playSound(isGobbling ? 'gobble' : 'place');
+            // Place piece - sound will play after server confirms
             socket.emit('place_piece', {
                 stackIndex: selection.stackIndex,
                 row,
@@ -265,10 +301,7 @@ const GameRoom = () => {
                 setSelection(null); // Deselect if clicking same cell
                 return;
             }
-            // Check if gobbling
-            const targetStack = gameState.board[row][col];
-            const isGobbling = targetStack.length > 0;
-            playSound(isGobbling ? 'gobble' : 'place');
+            // Move piece - sound will play after server confirms
             socket.emit('move_piece', {
                 fromRow: selection.row,
                 fromCol: selection.col,
