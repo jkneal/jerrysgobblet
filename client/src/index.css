@@ -2385,8 +2385,8 @@ h1 {
 /* Reaction Feature */
 .reaction-picker-container {
   position: fixed;
-  bottom: 90px;
-  left: 20px;
+  bottom: 20px;
+  right: 20px;
   z-index: 998;
   /* Below chat panel (999) but above other things */
   display: flex;
@@ -2508,8 +2508,8 @@ h1 {
 /* Mobile adjustments for reactions */
 @media (max-width: 768px) {
   .reaction-picker-container {
-    bottom: 65px;
-    left: 15px;
+    bottom: 15px;
+    right: 15px;
   }
 
   .reaction-toggle-btn {
