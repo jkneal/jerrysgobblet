@@ -251,6 +251,28 @@ const GameRoom = () => {
         return () => clearInterval(heartbeatInterval);
     }, [socket]);
 
+    // Attempt full screen on first interaction (works on Android, limited on iOS)
+    useEffect(() => {
+        const handleInteraction = () => {
+            try {
+                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {
+                        // Ignore errors (e.g. user denied or not supported)
+                    });
+                }
+            } catch (e) {
+                // Ignore
+            }
+        };
+
+        const events = ['touchstart', 'click'];
+        events.forEach(e => document.addEventListener(e, handleInteraction, { once: true }));
+
+        return () => {
+            events.forEach(e => document.removeEventListener(e, handleInteraction));
+        };
+    }, []);
+
     // Warn user before leaving active game
     useEffect(() => {
         const shouldWarn = gameState?.state === 'playing' && !gameState?.winner;

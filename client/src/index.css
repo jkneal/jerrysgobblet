@@ -1587,14 +1587,15 @@ h1 {
   left: 0;
   width: 300px;
   height: 300px;
-  background: rgba(30, 30, 30, 0.98);
+  background: #1a1a1a;
+  /* Fully opaque */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   z-index: 999;
-  animation: slideUp 0.3s ease;
+  animation: slideUp 0.15s ease;
 }
 
 @keyframes slideUp {
@@ -1766,9 +1767,9 @@ h1 {
 /* Mobile Styles */
 @media (max-width: 768px) {
   .chat-panel {
-    width: 250px;
-    height: 200px;
-    left: 0;
+    width: 300px;
+    height: 220px;
+    left: -10px;
     right: auto;
   }
 
@@ -2451,7 +2452,7 @@ h1 {
   padding: 10px;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: slideUpFade 0.2s ease-out;
+  animation: slideUpFade 0.15s ease-out;
 }
 
 @keyframes slideUpFade {
