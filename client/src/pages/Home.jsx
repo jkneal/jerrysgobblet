@@ -35,8 +35,6 @@ const Home = () => {
                 </>
             )}
 
-            <div className="subtitle">The Ultimate Strategy Game</div>
-
             <div className="menu-buttons">
                 {user ? (
                     <button className="menu-btn primary" onClick={() => navigate('/lobby')}>
