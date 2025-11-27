@@ -1,0 +1,22 @@
+{
+    "name": "Jerry's Gobblet",
+    "short_name": "Gobblet",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1a1a1a",
+    "theme_color": "#1a1a1a",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/jgob.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/goblet1.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
