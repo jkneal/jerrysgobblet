@@ -504,6 +504,20 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Handle emoji reactions
+    socket.on('send_reaction', ({ reaction }) => {
+        const game = gameManager.getGameByPlayerId(socket.id);
+        if (game) {
+            // Broadcast to everyone in the room (including sender, though sender might handle locally)
+            // Actually, usually sender handles locally for instant feedback, but broadcasting simplifies sync.
+            // Let's broadcast to everyone so they see it at roughly the same time.
+            io.to(game.id).emit('receive_reaction', {
+                reaction,
+                senderId: socket.id
+            });
+        }
+    });
+
     socket.on('player_heartbeat', () => {
         const game = gameManager.getGameByPlayerId(socket.id);
         if (game) {

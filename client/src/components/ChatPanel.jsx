@@ -35,10 +35,11 @@ const ChatPanel = ({ socket, gameId, playerId, playerName, isOpen, onToggle }) =
         };
     }, [socket, isOpen]);
 
-    // Reset unread count when panel opens
+    // Reset unread count and scroll to bottom when panel opens
     useEffect(() => {
         if (isOpen) {
             setUnreadCount(0);
+            scrollToBottom();
         }
     }, [isOpen]);
 

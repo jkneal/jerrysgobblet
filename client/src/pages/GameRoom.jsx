@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import GameBoard from '../components/GameBoard';
 import PlayerHand from '../components/PlayerHand';
 import ChatPanel from '../components/ChatPanel';
+import ReactionPicker from '../components/ReactionPicker';
+import ReactionDisplay from '../components/ReactionDisplay';
 import useSound from '../hooks/useSound';
 
 // We'll manage the socket connection at the top level or singleton if needed, 
@@ -27,6 +29,7 @@ const GameRoom = () => {
     const [selection, setSelection] = useState(null); // { type: 'hand'|'board', stackIndex?, row?, col? }
     const [lastMove, setLastMove] = useState(null);
     const [chatOpen, setChatOpen] = useState(false);
+    const [reactions, setReactions] = useState([]); // Array of { id, emoji, isMine }
 
     const playerIdRef = useRef(null); // To store the player's socket ID
     const gameIdRef = useRef(null); // To store the current game ID
@@ -118,9 +121,9 @@ const GameRoom = () => {
         });
 
         newSocket.on('game_update', (state) => {
-            // Play opponent sound if turn changed and it's not our turn
+            // Play opponent sound if turn changed TO us (opponent just moved)
             const playerId = playerIdRef.current;
-            if (previousTurnRef.current && state.turn !== playerId && previousTurnRef.current !== state.turn) {
+            if (previousTurnRef.current && state.turn === playerId && previousTurnRef.current !== state.turn) {
                 playSound('opponent');
             }
             previousTurnRef.current = state.turn;
@@ -189,6 +192,19 @@ const GameRoom = () => {
                 localStorage.removeItem('currentGameId');
                 navigate('/lobby');
             }
+        });
+
+        newSocket.on('receive_reaction', ({ reaction, senderId }) => {
+            const isMine = senderId === newSocket.id;
+            const newReaction = {
+                id: Date.now() + Math.random(),
+                emoji: reaction,
+                isMine
+            };
+            setReactions(prev => [...prev, newReaction]);
+
+            // Optional: Play a subtle sound for reactions
+            // playSound('pop'); 
         });
 
         setSocket(newSocket);
@@ -340,6 +356,16 @@ const GameRoom = () => {
             setLastMove(null); // Clear last move highlighting
             socket.emit('reset_game');
         }
+    };
+
+    const handleSendReaction = (emoji) => {
+        if (socket && socket.connected) {
+            socket.emit('send_reaction', { reaction: emoji });
+        }
+    };
+
+    const handleReactionAnimationEnd = (id) => {
+        setReactions(prev => prev.filter(r => r.id !== id));
     };
 
     if (!gameState) {
@@ -530,6 +556,16 @@ const GameRoom = () => {
                     isOpen={chatOpen}
                     onToggle={() => setChatOpen(!chatOpen)}
                 />
+            )}
+
+            {/* Reactions */}
+            <ReactionDisplay
+                reactions={reactions}
+                onAnimationEnd={handleReactionAnimationEnd}
+            />
+
+            {gameState && !gameState.winner && gameState.state === 'playing' && (
+                <ReactionPicker onSelect={handleSendReaction} />
             )}
         </div>
     );
