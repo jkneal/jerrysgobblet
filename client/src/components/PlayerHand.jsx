@@ -19,7 +19,7 @@ const COLOR_NAMES = {
     '#dc143c': 'Crimson'
 };
 
-const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPlayer, isMyTurn = true, player }) => {
+const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPlayer, isMyTurn = true, player, chatButton, emojiButton }) => {
     const displayName = player?.displayName || (isCurrentPlayer ? 'Your Hand' : 'Opponent');
     const avatarUrl = player?.avatarUrl;
     const rank = player?.rank;
@@ -27,6 +27,20 @@ const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPl
 
     return (
         <div className={`player-hand ${color} ${isCurrentPlayer ? 'current-player' : ''} ${isDisabled ? 'disabled' : ''}`}>
+            {/* Chat button in top left corner (only for current player) */}
+            {isCurrentPlayer && chatButton && (
+                <div className="hand-corner-button hand-corner-left">
+                    {chatButton}
+                </div>
+            )}
+
+            {/* Emoji button in top right corner (only for current player) */}
+            {isCurrentPlayer && emojiButton && (
+                <div className="hand-corner-button hand-corner-right">
+                    {emojiButton}
+                </div>
+            )}
+
             <div className="hand-header">
                 {avatarUrl && (
                     <img

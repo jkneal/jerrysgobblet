@@ -24,11 +24,13 @@ const useSound = () => {
         Object.keys(audioRefs.current).forEach(soundName => {
             try {
                 const audio = new Audio(`/sounds/${soundName}.mp3`);
-                audio.volume = soundName === 'victory' ? 0.75 : 0.5;
+                audio.volume = 0; // Mute during unlock
                 // Safari requires play() to be called during user interaction
                 audio.play().then(() => {
                     audio.pause();
                     audio.currentTime = 0;
+                    // Set proper volume after unlock
+                    audio.volume = soundName === 'victory' ? 0.75 : 0.5;
                 }).catch(() => {
                     // Ignore errors during unlock
                 });

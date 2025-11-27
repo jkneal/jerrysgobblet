@@ -525,6 +525,23 @@ const GameRoom = () => {
                     isCurrentPlayer={true}
                     isMyTurn={isMyTurn}
                     player={gameState.players.find(p => p.color === myPlayerColor)}
+                    chatButton={
+                        gameState.state === 'playing' && (
+                            <ChatPanel
+                                socket={socket}
+                                gameId={gameState.id}
+                                playerId={playerId}
+                                playerName={gameState.players.find(p => p.id === playerId)?.displayName || 'Player'}
+                                isOpen={chatOpen}
+                                onToggle={() => setChatOpen(!chatOpen)}
+                            />
+                        )
+                    }
+                    emojiButton={
+                        gameState.state === 'playing' && (
+                            <ReactionPicker onSelect={handleSendReaction} />
+                        )
+                    }
                 />
             )}
 
@@ -546,27 +563,11 @@ const GameRoom = () => {
                 </div>
             )}
 
-            {/* Chat Panel */}
-            {gameState && (
-                <ChatPanel
-                    socket={socket}
-                    gameId={gameState.id}
-                    playerId={playerId}
-                    playerName={gameState.players.find(p => p.id === playerId)?.displayName || 'Player'}
-                    isOpen={chatOpen}
-                    onToggle={() => setChatOpen(!chatOpen)}
-                />
-            )}
-
             {/* Reactions */}
             <ReactionDisplay
                 reactions={reactions}
                 onAnimationEnd={handleReactionAnimationEnd}
             />
-
-            {gameState && !gameState.winner && gameState.state === 'playing' && (
-                <ReactionPicker onSelect={handleSendReaction} />
-            )}
         </div>
     );
 };
