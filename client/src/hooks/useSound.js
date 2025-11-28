@@ -20,31 +20,37 @@ const useSound = () => {
     const unlockAudio = useCallback(() => {
         if (audioUnlocked.current) return;
 
-        // Create and attempt to play all sounds to unlock audio context
-        Object.keys(audioRefs.current).forEach(soundName => {
-            try {
-                const audio = new Audio(`/sounds/${soundName}.mp3`);
-                audio.muted = true; // Use muted property for reliable silence
-                audio.volume = 0;
+        // Create and attempt to play a short sound to unlock audio context
+        // We only use 'place' as it's short and sufficient to unlock the audio engine
+        const soundName = 'place';
+        try {
+            const audio = new Audio(`/sounds/${soundName}.mp3`);
+            audio.muted = true;
+            audio.volume = 0;
 
-                // Safari requires play() to be called during user interaction
-                const playPromise = audio.play();
+            const playPromise = audio.play();
 
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        audio.pause();
-                        audio.currentTime = 0;
-                        // Unmute and set volume for future use
-                        audio.muted = false;
-                        audio.volume = soundName === 'victory' ? 0.75 : 0.5;
-                    }).catch(() => {
-                        // Ignore errors during unlock (e.g. if interrupted)
-                    });
-                }
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.muted = false;
+                    audio.volume = 0.5;
+                }).catch(() => {
+                    // Ignore errors
+                });
+            }
 
-                audioRefs.current[soundName] = audio;
-            } catch (error) {
-                console.warn(`Failed to preload sound: ${soundName}`, error);
+            audioRefs.current[soundName] = audio;
+        } catch (error) {
+            console.warn(`Failed to preload sound: ${soundName}`, error);
+        }
+
+        // Initialize other refs without playing
+        Object.keys(audioRefs.current).forEach(key => {
+            if (key !== soundName && !audioRefs.current[key]) {
+                // Just create the object, don't play it yet
+                // The audio context should be unlocked by the first play above
             }
         });
 

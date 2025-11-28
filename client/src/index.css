@@ -179,15 +179,15 @@ h1 {
 }
 
 .board-cell.selected {
-  border-color: #002266;
+  border-color: #FFD700;
   box-shadow:
-    0 0 0 4px #002266,
-    0 0 30px rgba(0, 34, 102, 0.8),
-    0 0 60px rgba(0, 34, 102, 0.5),
-    inset 0 0 20px rgba(0, 34, 102, 0.4);
-  transform: translateY(-4px) scale(1.05);
-  animation: pulse-selection 1.5s ease-in-out infinite;
-  z-index: 10;
+    0 0 0 4px #FFD700,
+    0 0 30px rgba(255, 215, 0, 0.8),
+    0 0 60px rgba(255, 215, 0, 0.5),
+    inset 0 0 20px rgba(255, 215, 0, 0.4);
+  transform: translateY(-8px) scale(1.15);
+  animation: pulse-selection 1s ease-in-out infinite;
+  z-index: 100;
 }
 
 .board-cell.valid-target {
@@ -374,14 +374,15 @@ h1 {
 }
 
 .hand-stack-container.selected .hand-stack-main {
-  border-color: #002266;
+  border-color: #FFD700;
   border-width: 4px;
   box-shadow:
-    0 0 30px rgba(0, 34, 102, 0.8),
-    0 0 60px rgba(0, 34, 102, 0.5),
-    inset 0 0 20px rgba(0, 34, 102, 0.4);
-  transform: translateY(-4px) scale(1.05);
-  animation: pulse-selection 1.5s ease-in-out infinite;
+    0 0 30px rgba(255, 215, 0, 0.8),
+    0 0 60px rgba(255, 215, 0, 0.5),
+    inset 0 0 20px rgba(255, 215, 0, 0.4);
+  transform: translateY(-8px) scale(1.15);
+  animation: pulse-selection 1s ease-in-out infinite;
+  z-index: 100;
 }
 
 @keyframes pulse-selection {
@@ -389,16 +390,19 @@ h1 {
   0%,
   100% {
     box-shadow:
-      0 0 30px rgba(0, 188, 212, 0.6),
-      0 0 60px rgba(0, 188, 212, 0.3),
-      inset 0 0 20px rgba(0, 188, 212, 0.2);
+      0 0 30px rgba(255, 215, 0, 0.6),
+      0 0 60px rgba(255, 215, 0, 0.3),
+      inset 0 0 20px rgba(255, 215, 0, 0.2);
+    border-color: #FFD700;
   }
 
   50% {
     box-shadow:
-      0 0 40px rgba(0, 188, 212, 0.8),
-      0 0 80px rgba(0, 188, 212, 0.5),
-      inset 0 0 30px rgba(0, 188, 212, 0.3);
+      0 0 40px rgba(255, 215, 0, 0.9),
+      0 0 80px rgba(255, 215, 0, 0.6),
+      inset 0 0 30px rgba(255, 215, 0, 0.4);
+    border-color: #FFF;
+    transform: translateY(-10px) scale(1.18);
   }
 }
 
@@ -2542,5 +2546,132 @@ h1 {
 
   .reaction-btn {
     font-size: 1.5rem;
+  }
+}
+
+/* Exit Game Button */
+.exit-game-btn {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  align-self: center;
+  /* Center in flex container */
+}
+
+.exit-game-btn:hover {
+  background: rgba(220, 20, 60, 0.8);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+/* Exit Modal */
+.exit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.2s ease;
+}
+
+.exit-modal {
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.2s ease;
+}
+
+.exit-modal h3 {
+  margin: 0 0 12px 0;
+  color: white;
+  font-size: 20px;
+}
+
+.exit-modal p {
+  margin: 0 0 24px 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.exit-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.exit-modal-actions button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.exit-modal-actions .cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.exit-modal-actions .cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.exit-modal-actions .confirm-btn {
+  background: #dc143c;
+  color: white;
+}
+
+.exit-modal-actions .confirm-btn:hover {
+  background: #ff1744;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }

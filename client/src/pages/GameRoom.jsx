@@ -29,6 +29,7 @@ const GameRoom = () => {
     const [selection, setSelection] = useState(null); // { type: 'hand'|'board', stackIndex?, row?, col? }
     const [lastMove, setLastMove] = useState(null);
     const [chatOpen, setChatOpen] = useState(false);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [reactions, setReactions] = useState([]); // Array of { id, emoji, isMine }
 
     const playerIdRef = useRef(null); // To store the player's socket ID
@@ -250,6 +251,34 @@ const GameRoom = () => {
 
         return () => clearInterval(heartbeatInterval);
     }, [socket]);
+
+    // Chat Logic (Lifted from ChatPanel to persist history)
+    const [chatMessages, setChatMessages] = useState([]);
+    const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleChatMessage = (message) => {
+            setChatMessages(prev => [...prev, message]);
+            if (!chatOpen) {
+                setUnreadChatCount(prev => prev + 1);
+            }
+        };
+
+        socket.on('chat_message', handleChatMessage);
+
+        return () => {
+            socket.off('chat_message', handleChatMessage);
+        };
+    }, [socket, chatOpen]);
+
+    // Reset unread count when chat opens
+    useEffect(() => {
+        if (chatOpen) {
+            setUnreadChatCount(0);
+        }
+    }, [chatOpen]);
 
     // Attempt full screen on first interaction (works on Android, limited on iOS)
     useEffect(() => {
@@ -556,6 +585,8 @@ const GameRoom = () => {
                                 playerName={gameState.players.find(p => p.id === playerId)?.displayName || 'Player'}
                                 isOpen={chatOpen}
                                 onToggle={() => setChatOpen(!chatOpen)}
+                                messages={chatMessages}
+                                unreadCount={unreadChatCount}
                             />
                         )
                     }
@@ -574,6 +605,26 @@ const GameRoom = () => {
                     <p className="win-subtitle">
                         {gameState.winner === myPlayerColor ? 'You gobbled your way to glory!' : 'Better luck next time.'}
                     </p>
+
+                    {/* Chat and Reactions in Footer */}
+                    <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '20px', position: 'relative', height: '40px', zIndex: 10 }}>
+                        <div style={{ position: 'relative' }}>
+                            <ChatPanel
+                                socket={socket}
+                                gameId={gameState.id}
+                                playerId={playerId}
+                                playerName={gameState.players.find(p => p.id === playerId)?.displayName || 'Player'}
+                                isOpen={chatOpen}
+                                onToggle={() => setChatOpen(!chatOpen)}
+                                messages={chatMessages}
+                                unreadCount={unreadChatCount}
+                            />
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                            <ReactionPicker onSelect={handleSendReaction} />
+                        </div>
+                    </div>
+
                     <div className="game-over-actions inline">
                         <button className="action-btn play-again" onClick={handlePlayAgain}>
                             Play Again
@@ -590,6 +641,29 @@ const GameRoom = () => {
                 reactions={reactions}
                 onAnimationEnd={handleReactionAnimationEnd}
             />
+
+            {/* Exit Game Button (PWA Support) */}
+            <button
+                className="exit-game-btn"
+                onClick={() => setShowExitConfirm(true)}
+                title="Exit Game"
+            >
+                ✕ Leave Game
+            </button>
+
+            {/* Exit Confirmation Modal */}
+            {showExitConfirm && (
+                <div className="exit-modal-overlay">
+                    <div className="exit-modal">
+                        <h3>Leave Game?</h3>
+                        <p>Are you sure you want to leave the current game?</p>
+                        <div className="exit-modal-actions">
+                            <button className="cancel-btn" onClick={() => setShowExitConfirm(false)}>Cancel</button>
+                            <button className="confirm-btn" onClick={() => navigate('/')}>Leave</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,47 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 
-const ChatPanel = ({ socket, gameId, playerId, playerName, isOpen, onToggle }) => {
-    const [messages, setMessages] = useState([]);
+const ChatPanel = ({ socket, gameId, playerId, playerName, isOpen, onToggle, messages = [], unreadCount = 0 }) => {
     const [inputValue, setInputValue] = useState('');
-    const [unreadCount, setUnreadCount] = useState(0);
     const messagesEndRef = useRef(null);
 
-    // Scroll to bottom when new messages arrive
+    // Scroll to bottom when new messages arrive or panel opens
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    // Listen for incoming chat messages
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleChatMessage = (message) => {
-            setMessages(prev => [...prev, message]);
-
-            // Increment unread count if panel is closed
-            if (!isOpen) {
-                setUnreadCount(prev => prev + 1);
-            }
-        };
-
-        socket.on('chat_message', handleChatMessage);
-
-        return () => {
-            socket.off('chat_message', handleChatMessage);
-        };
-    }, [socket, isOpen]);
-
-    // Reset unread count and scroll to bottom when panel opens
-    useEffect(() => {
         if (isOpen) {
-            setUnreadCount(0);
             scrollToBottom();
         }
-    }, [isOpen]);
+    }, [messages, isOpen]);
 
     const handleSendMessage = (e) => {
         e.preventDefault();
