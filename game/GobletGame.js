@@ -1,12 +1,13 @@
 const GameModel = require('../models/GameModel');
 
 class GobletGame {
-    constructor(id, isPublic = true, joinCode = null) {
+    constructor(id, isPublic = true, joinCode = null, boardSize = 4) {
         this.id = id;
         this.players = []; // { id: socketId, userId: dbUserId, color: hex, displayName: string, avatarUrl: string }
-        // 4x4 grid, each cell is a stack of pieces. 
-        // Piece: { color: hex, size: 1|2|3|4 }
-        this.board = Array(4).fill(null).map(() => Array(4).fill(null).map(() => []));
+        // Dynamic grid based on boardSize (3x3 or 4x4)
+        // Piece: { color: hex, size: 1|2|3|4 (or 1|2|3 for 3x3) }
+        this.boardSize = boardSize;
+        this.board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(null).map(() => []));
         this.turn = null;
         this.state = 'waiting'; // waiting, playing, finished
         this.winner = null;
@@ -93,11 +94,14 @@ class GobletGame {
 
         this.players.push(player);
 
-        // Initialize hand for this color
+        // Initialize hand for this color (3 sizes for 3x3, 4 sizes for 4x4)
+        const sizes = this.boardSize === 3
+            ? [1, 2, 3]
+            : [1, 2, 3, 4];
         this.playerHands[color] = [
-            [1, 2, 3, 4],
-            [1, 2, 3, 4],
-            [1, 2, 3, 4]
+            [...sizes],
+            [...sizes],
+            [...sizes]
         ];
 
         if (this.players.length === 2) {
@@ -126,7 +130,7 @@ class GobletGame {
     }
 
     reset() {
-        this.board = Array(4).fill(null).map(() => Array(4).fill(null).map(() => []));
+        this.board = Array(this.boardSize).fill(null).map(() => Array(this.boardSize).fill(null).map(() => []));
         this.winner = null;
 
         // Swap player order to alternate who goes first
@@ -142,13 +146,16 @@ class GobletGame {
             this.turn = null;
         }
 
-        // Reset hands for current players
+        // Reset hands for current players (3 sizes for 3x3, 4 sizes for 4x4)
         this.playerHands = {};
+        const sizes = this.boardSize === 3
+            ? [1, 2, 3]
+            : [1, 2, 3, 4];
         this.players.forEach(p => {
             this.playerHands[p.color] = [
-                [1, 2, 3, 4],
-                [1, 2, 3, 4],
-                [1, 2, 3, 4]
+                [...sizes],
+                [...sizes],
+                [...sizes]
             ];
         });
 
@@ -293,7 +300,8 @@ class GobletGame {
     }
 
     isValidMove(pieceSize, row, col) {
-        if (row < 0 || row > 3 || col < 0 || col > 3) return false;
+        const maxIndex = this.boardSize - 1;
+        if (row < 0 || row > maxIndex || col < 0 || col > maxIndex) return false;
         const targetStack = this.board[row][col];
 
         // Empty cell is always valid
@@ -320,6 +328,7 @@ class GobletGame {
     checkWin() {
         const winners = new Set();
         const board = this.board;
+        const size = this.boardSize;
 
         // Helper to get color at cell (or null)
         const getColor = (r, c) => {
@@ -328,30 +337,59 @@ class GobletGame {
         };
 
         // Check rows
-        for (let r = 0; r < 4; r++) {
-            const c0 = getColor(r, 0);
-            if (c0 && c0 === getColor(r, 1) && c0 === getColor(r, 2) && c0 === getColor(r, 3)) {
-                winners.add(c0);
+        for (let r = 0; r < size; r++) {
+            const firstColor = getColor(r, 0);
+            if (firstColor) {
+                let isWin = true;
+                for (let c = 1; c < size; c++) {
+                    if (getColor(r, c) !== firstColor) {
+                        isWin = false;
+                        break;
+                    }
+                }
+                if (isWin) winners.add(firstColor);
             }
         }
 
         // Check cols
-        for (let c = 0; c < 4; c++) {
-            const r0 = getColor(0, c);
-            if (r0 && r0 === getColor(1, c) && r0 === getColor(2, c) && r0 === getColor(3, c)) {
-                winners.add(r0);
+        for (let c = 0; c < size; c++) {
+            const firstColor = getColor(0, c);
+            if (firstColor) {
+                let isWin = true;
+                for (let r = 1; r < size; r++) {
+                    if (getColor(r, c) !== firstColor) {
+                        isWin = false;
+                        break;
+                    }
+                }
+                if (isWin) winners.add(firstColor);
             }
         }
 
-        // Check diagonals
+        // Check diagonal (top-left to bottom-right)
         const d1 = getColor(0, 0);
-        if (d1 && d1 === getColor(1, 1) && d1 === getColor(2, 2) && d1 === getColor(3, 3)) {
-            winners.add(d1);
+        if (d1) {
+            let isWin = true;
+            for (let i = 1; i < size; i++) {
+                if (getColor(i, i) !== d1) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin) winners.add(d1);
         }
 
-        const d2 = getColor(0, 3);
-        if (d2 && d2 === getColor(1, 2) && d2 === getColor(2, 1) && d2 === getColor(3, 0)) {
-            winners.add(d2);
+        // Check diagonal (top-right to bottom-left)
+        const d2 = getColor(0, size - 1);
+        if (d2) {
+            let isWin = true;
+            for (let i = 1; i < size; i++) {
+                if (getColor(i, size - 1 - i) !== d2) {
+                    isWin = false;
+                    break;
+                }
+            }
+            if (isWin) winners.add(d2);
         }
 
         if (winners.size === 0) return false;
@@ -377,47 +415,77 @@ class GobletGame {
 
     calculateWinningLine(winnerColor) {
         const board = this.board;
+        const size = this.boardSize;
         const getColor = (r, c) => {
             const stack = board[r][c];
             return stack.length > 0 ? stack[stack.length - 1].color : null;
         };
 
         // Check rows
-        for (let r = 0; r < 4; r++) {
-            if (getColor(r, 0) === winnerColor &&
-                getColor(r, 1) === winnerColor &&
-                getColor(r, 2) === winnerColor &&
-                getColor(r, 3) === winnerColor) {
-                this.winningLine = [{ r, c: 0 }, { r, c: 1 }, { r, c: 2 }, { r, c: 3 }];
+        for (let r = 0; r < size; r++) {
+            let isWinningRow = true;
+            for (let c = 0; c < size; c++) {
+                if (getColor(r, c) !== winnerColor) {
+                    isWinningRow = false;
+                    break;
+                }
+            }
+            if (isWinningRow) {
+                this.winningLine = [];
+                for (let c = 0; c < size; c++) {
+                    this.winningLine.push({ r, c });
+                }
                 return;
             }
         }
 
         // Check cols
-        for (let c = 0; c < 4; c++) {
-            if (getColor(0, c) === winnerColor &&
-                getColor(1, c) === winnerColor &&
-                getColor(2, c) === winnerColor &&
-                getColor(3, c) === winnerColor) {
-                this.winningLine = [{ r: 0, c }, { r: 1, c }, { r: 2, c }, { r: 3, c }];
+        for (let c = 0; c < size; c++) {
+            let isWinningCol = true;
+            for (let r = 0; r < size; r++) {
+                if (getColor(r, c) !== winnerColor) {
+                    isWinningCol = false;
+                    break;
+                }
+            }
+            if (isWinningCol) {
+                this.winningLine = [];
+                for (let r = 0; r < size; r++) {
+                    this.winningLine.push({ r, c });
+                }
                 return;
             }
         }
 
-        // Check diagonals
-        if (getColor(0, 0) === winnerColor &&
-            getColor(1, 1) === winnerColor &&
-            getColor(2, 2) === winnerColor &&
-            getColor(3, 3) === winnerColor) {
-            this.winningLine = [{ r: 0, c: 0 }, { r: 1, c: 1 }, { r: 2, c: 2 }, { r: 3, c: 3 }];
+        // Check diagonal (top-left to bottom-right)
+        let isDiag1 = true;
+        for (let i = 0; i < size; i++) {
+            if (getColor(i, i) !== winnerColor) {
+                isDiag1 = false;
+                break;
+            }
+        }
+        if (isDiag1) {
+            this.winningLine = [];
+            for (let i = 0; i < size; i++) {
+                this.winningLine.push({ r: i, c: i });
+            }
             return;
         }
 
-        if (getColor(0, 3) === winnerColor &&
-            getColor(1, 2) === winnerColor &&
-            getColor(2, 1) === winnerColor &&
-            getColor(3, 0) === winnerColor) {
-            this.winningLine = [{ r: 0, c: 3 }, { r: 1, c: 2 }, { r: 2, c: 1 }, { r: 3, c: 0 }];
+        // Check diagonal (top-right to bottom-left)
+        let isDiag2 = true;
+        for (let i = 0; i < size; i++) {
+            if (getColor(i, size - 1 - i) !== winnerColor) {
+                isDiag2 = false;
+                break;
+            }
+        }
+        if (isDiag2) {
+            this.winningLine = [];
+            for (let i = 0; i < size; i++) {
+                this.winningLine.push({ r: i, c: size - 1 - i });
+            }
             return;
         }
     }
@@ -427,6 +495,7 @@ class GobletGame {
             id: this.id,
             players: this.players,
             board: this.board,
+            boardSize: this.boardSize, // 3 or 4
             turn: this.turn,
             state: this.state,
             winner: this.winner,

@@ -67,9 +67,10 @@ const ColorPreferences = () => {
             state: {
                 color: selectedColor.hex,
                 gameId,
-                // Pass privacy options from previous screen
+                // Pass privacy options and board size from previous screen
                 isPublic: location.state?.isPublic,
-                requestJoinCode: location.state?.requestJoinCode
+                requestJoinCode: location.state?.requestJoinCode,
+                boardSize: location.state?.boardSize || 4 // Default to 4x4 if not specified
             },
             replace: true
         });

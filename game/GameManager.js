@@ -48,7 +48,7 @@ class GameManager {
         return newGame;
     }
 
-    createGame(playerId, preferredColor, userData = null, isPublic = true, requestJoinCode = false) {
+    createGame(playerId, preferredColor, userData = null, isPublic = true, requestJoinCode = false, boardSize = 4) {
         // Check memory limit before creating
         if (!this.enforceMemoryLimit()) {
             throw new Error('Server at capacity. Please try again in a moment.');
@@ -57,7 +57,7 @@ class GameManager {
         // Generate join code if private game requested
         const joinCode = requestJoinCode ? this.generateJoinCode() : null;
 
-        const game = new GobletGame(uuidv4(), isPublic, joinCode);
+        const game = new GobletGame(uuidv4(), isPublic, joinCode, boardSize);
         if (playerId) {
             game.addPlayer(playerId, preferredColor, userData);
         }
@@ -111,8 +111,9 @@ class GameManager {
                 return null;
             }
 
-            // Create a new game instance (this initializes playerHands as {})
-            const game = new GobletGame(gameData.id);
+            // Create a new game instance with correct boardSize
+            const boardSize = gameData.boardSize || 4; // Default to 4x4 for old games
+            const game = new GobletGame(gameData.id, gameData.isPublic, gameData.joinCode, boardSize);
 
             // Restore state - be careful with field names
             game.state = gameData.state;
@@ -122,6 +123,7 @@ class GameManager {
             game.playerHands = gameData.playerHands || {}; // Use playerHands from loaded data
             game.lastMove = gameData.lastMove;
             game.players = gameData.players;
+            game.winningLine = gameData.winningLine;
 
             // Add to memory
             this.games.set(game.id, game);

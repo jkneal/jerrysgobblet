@@ -140,6 +140,11 @@ const Lobby = () => {
                                                     />
                                                     <span>{getDisplayColor(game.players[0].color)}</span>
                                                 </div>
+                                                {game.boardSize && (
+                                                    <div className="board-size-indicator" style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '0.25rem' }}>
+                                                        {game.boardSize}x{game.boardSize} Board
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <button

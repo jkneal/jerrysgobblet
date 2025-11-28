@@ -134,6 +134,7 @@ app.get('/api/games/waiting', (req, res) => {
         if (game.state === 'waiting' && game.players.length === 1 && game.isPublic) {
             waitingGames.push({
                 id: game.id,
+                boardSize: game.boardSize || 4,
                 players: game.players.map(p => ({
                     displayName: p.displayName,
                     avatarUrl: p.avatarUrl,
@@ -225,7 +226,7 @@ io.on('connection', (socket) => {
     console.log('A user connected:', socket.id, user ? `(User ID: ${user})` : '(Not authenticated)');
 
     // Create a new game
-    socket.on('create_game', async ({ color, isPublic = true, requestJoinCode = false } = {}) => {
+    socket.on('create_game', async ({ color, isPublic = true, requestJoinCode = false, boardSize = 4 } = {}) => {
         // Get user data if authenticated
         let userData = null;
         if (user) {
@@ -247,7 +248,7 @@ io.on('connection', (socket) => {
 
         // Create new game
         try {
-            const game = gameManager.createGame(socket.id, color, userData, isPublic, requestJoinCode);
+            const game = gameManager.createGame(socket.id, color, userData, isPublic, requestJoinCode, boardSize);
             game.setPlayerConnected(socket.id, true);
 
             socket.join(game.id);

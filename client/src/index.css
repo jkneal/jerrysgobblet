@@ -121,8 +121,9 @@ h1 {
 
 /* Game Board */
 .game-board {
+  --board-size: 4; /* Default to 4x4, can be overridden inline */
   display: grid;
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-rows: repeat(var(--board-size), 1fr);
   gap: 1.5vmin;
   background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000);
   background-size: 400% 400%;
@@ -152,8 +153,9 @@ h1 {
 }
 
 .board-row {
+  --board-size: 4; /* Default to 4x4, can be overridden inline */
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--board-size), 1fr);
   gap: 1.5vmin;
 }
 

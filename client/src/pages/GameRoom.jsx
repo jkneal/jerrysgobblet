@@ -23,6 +23,7 @@ const GameRoom = () => {
     const location = useLocation();
     const playerColor = location.state?.color || '#ffd700'; // Default to gold
     const gameId = location.state?.gameId; // Optional: join specific game
+    const boardSize = location.state?.boardSize || 4; // Default to 4x4
 
     const [socket, setSocket] = useState(null);
     const [gameState, setGameState] = useState(null);
@@ -106,13 +107,14 @@ const GameRoom = () => {
                 newSocket.emit('rejoin_game', { gameId: storedGameId });
             } else {
                 // Create a new game
-                console.log('Creating new game with color:', playerColor);
+                console.log('Creating new game with color:', playerColor, 'boardSize:', boardSize);
                 const isPublic = location.state?.isPublic;
                 const requestJoinCode = location.state?.requestJoinCode;
                 newSocket.emit('create_game', {
                     color: playerColor,
                     isPublic: isPublic !== undefined ? isPublic : true,
-                    requestJoinCode: !!requestJoinCode
+                    requestJoinCode: !!requestJoinCode,
+                    boardSize: boardSize
                 });
             }
         });
@@ -134,13 +136,14 @@ const GameRoom = () => {
                 // Turn changed, meaning our move was successful
                 const prevBoard = previousBoardRef.current;
                 const newBoard = state.board;
+                const boardSize = state.boardSize || 4;
 
                 // Check if a piece was placed or moved
                 let foundChange = false;
                 let isGobbling = false;
 
-                for (let row = 0; row < 4; row++) {
-                    for (let col = 0; col < 4; col++) {
+                for (let row = 0; row < boardSize; row++) {
+                    for (let col = 0; col < boardSize; col++) {
                         const prevStack = prevBoard[row][col];
                         const newStack = newBoard[row][col];
 
@@ -558,6 +561,7 @@ const GameRoom = () => {
 
             <GameBoard
                 board={gameState.board}
+                boardSize={gameState.boardSize || 4}
                 onCellClick={handleBoardCellClick}
                 currentPlayer={myPlayerColor}
                 turn={turnColor}

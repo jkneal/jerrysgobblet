@@ -1,13 +1,13 @@
 import React from 'react';
 import GoblinPiece from './GoblinPiece';
 
-const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, lastMove, winningLine }) => {
+const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, lastMove, winningLine, boardSize = 4 }) => {
     // Calculate arrow position and rotation for board-to-board moves
     const renderMoveArrow = () => {
         if (!lastMove || lastMove.type !== 'move') return null;
 
         const { fromRow, fromCol, toRow, toCol } = lastMove;
-        const cellSize = 100 / 4; // Each cell is 25% of board
+        const cellSize = 100 / boardSize; // Each cell is a percentage of board based on size
 
         // Calculate center positions (in percentage)
         const fromX = (fromCol + 0.5) * cellSize;
@@ -58,9 +58,9 @@ const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, last
     };
 
     return (
-        <div className="game-board" style={{ position: 'relative' }}>
+        <div className="game-board" style={{ position: 'relative', '--board-size': boardSize }}>
             {board.map((row, rowIndex) => (
-                <div key={rowIndex} className="board-row">
+                <div key={rowIndex} className="board-row" style={{ '--board-size': boardSize }}>
                     {row.map((cell, colIndex) => {
                         const isSelected = selectedCell && selectedCell.row === rowIndex && selectedCell.col === colIndex;
                         const topPiece = cell.length > 0 ? cell[cell.length - 1] : null;

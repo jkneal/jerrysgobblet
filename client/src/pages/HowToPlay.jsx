@@ -107,15 +107,25 @@ const HowToPlay = () => {
                 <div className="rules-content">
                     <section>
                         <h2>🎯 Objective</h2>
-                        <p>Be the first player to get <strong>4 of your pieces in a row</strong> — horizontally, vertically, or diagonally.</p>
+                        <p><strong>4x4 Board:</strong> Get <strong>4 of your pieces in a row</strong> — horizontally, vertically, or diagonally.</p>
+                        <p><strong>3x3 Board:</strong> Get <strong>3 of your pieces in a row</strong> — horizontally, vertically, or diagonally.</p>
                     </section>
 
                     <section>
                         <h2>🎲 Setup</h2>
+                        <p>When creating a game, you can choose between a 4x4 or 3x3 board:</p>
+                        <h3>4x4 Board (Classic)</h3>
                         <ul>
                             <li>Each player starts with <strong>12 pieces</strong> in 3 stacks of 4 nested pieces</li>
                             <li>Pieces come in 4 sizes: Small (1), Medium (2), Large (3), and Extra Large (4)</li>
                             <li>The board is a 4×4 grid, initially empty</li>
+                            <li>Players choose their piece color</li>
+                        </ul>
+                        <h3>3x3 Board (Quick Game)</h3>
+                        <ul>
+                            <li>Each player starts with <strong>9 pieces</strong> in 3 stacks of 3 nested pieces</li>
+                            <li>Pieces come in 3 sizes: Small (1), Medium (2), and Large (3)</li>
+                            <li>The board is a 3×3 grid, initially empty</li>
                             <li>Players choose their piece color</li>
                         </ul>
                     </section>
