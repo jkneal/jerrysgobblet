@@ -1,12 +1,60 @@
 import React, { useMemo } from 'react';
 
-const GoblinPiece = ({ color, size }) => {
+const GoblinPiece = ({ color, size, isWinning = false }) => {
     // Scale the SVG based on size (1-4) with less dramatic scaling
     // Size 1 = 0.8, Size 2 = 0.9, Size 3 = 1.0, Size 4 = 1.1
     const scale = 0.7 + (size * 0.1);
 
     // Random delay between 0-15 seconds to stagger animations
     const animationDelay = useMemo(() => Math.random() * 15, []);
+
+    // Color mapping for trinkets - provides good contrast with piece colors
+    const TRINKET_COLOR_MAP = {
+        '#ffd700': '#8b6914', // Gold -> Dark Gold
+        '#c0c0c0': '#505050', // Silver -> Dark Gray
+        '#e91e63': '#8b1538', // Ruby -> Dark Ruby
+        '#2196f3': '#0d47a1', // Sapphire -> Dark Blue
+        '#4caf50': '#1b5e20', // Emerald -> Dark Green
+        '#9c27b0': '#4a148c', // Amethyst -> Dark Purple
+        '#ff9800': '#e65100', // Amber -> Dark Orange
+        '#00bcd4': '#006064', // Turquoise -> Dark Cyan
+        '#ff4081': '#880e4f', // Rose -> Dark Pink
+        '#3f51b5': '#1a237e', // Indigo -> Dark Indigo
+        '#cddc39': '#827717', // Lime -> Dark Lime
+        '#00e5ff': '#006064', // Cyan -> Dark Cyan
+        '#795548': '#3e2723', // Bronze -> Dark Brown
+        '#607d8b': '#263238', // Slate -> Dark Slate
+        '#dc143c': '#8b0000', // Crimson -> Dark Red
+    };
+
+    // Get trinket color and darker stroke color
+    const beadColor = TRINKET_COLOR_MAP[color] || '#000000';
+
+    // Make stroke even darker for better definition
+    const getStrokeColor = (trinketColor) => {
+        const hex = trinketColor.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+
+        const darkerR = Math.floor(r * 0.5);
+        const darkerG = Math.floor(g * 0.5);
+        const darkerB = Math.floor(b * 0.5);
+
+        return `#${darkerR.toString(16).padStart(2, '0')}${darkerG.toString(16).padStart(2, '0')}${darkerB.toString(16).padStart(2, '0')}`;
+    };
+
+    const strokeColor = getStrokeColor(beadColor);
+
+    // Bead positions based on size
+    const beadConfigs = {
+        1: [{ x: 50, y: 33 }],
+        2: [{ x: 37, y: 32 }, { x: 63, y: 32 }],
+        3: [{ x: 32, y: 32 }, { x: 50, y: 33 }, { x: 68, y: 32 }],
+        4: [{ x: 30, y: 31 }, { x: 43, y: 33 }, { x: 57, y: 33 }, { x: 70, y: 31 }]
+    };
+
+    const beads = beadConfigs[size] || beadConfigs[1];
 
     return (
         <svg
@@ -18,26 +66,6 @@ const GoblinPiece = ({ color, size }) => {
                 overflow: 'visible'
             }}
         >
-            {/* Feather/antenna on top - angled */}
-            <g
-                style={{
-                    animation: `goblin-feather-wiggle 3s ease-in-out infinite`,
-                    animationDelay: `${animationDelay}s`,
-                    transformOrigin: '52px 20px'
-                }}
-            >
-                <ellipse
-                    cx="52"
-                    cy="12"
-                    rx="4"
-                    ry="10"
-                    fill={color}
-                    opacity="1"
-                    transform="rotate(20 52 12)"
-                />
-            </g>
-
-
             {/* Main body - rounded top, square bottom */}
             <path
                 d="M 25 45
@@ -152,6 +180,48 @@ const GoblinPiece = ({ color, size }) => {
                     transformOrigin: '75px 55px'
                 }}
             />
+
+            {/* Headband with beads - drawn last so it appears on top */}
+            <g>
+                {/* Headband strap */}
+                <path
+                    d="M 25,31 Q50,36 75,31"
+                    stroke="rgba(0,0,0,0.4)"
+                    strokeWidth="3"
+                    fill="none"
+                />
+
+                {/* Beads/trinkets */}
+                {beads.map((bead, index) => (
+                    <polygon
+                        key={index}
+                        points={`${bead.x - 3},${bead.y - 1} ${bead.x + 3},${bead.y - 1} ${bead.x + 3.5},${bead.y + 3} ${bead.x - 3.5},${bead.y + 3}`}
+                        fill={beadColor}
+                        stroke={strokeColor}
+                        strokeWidth="0.5"
+                        className={isWinning ? 'winning-trinket' : ''}
+                    />
+                ))}
+            </g>
+
+            {/* Feather/antenna on top - angled */}
+            <g
+                style={{
+                    animation: `goblin-feather-wiggle 3s ease-in-out infinite`,
+                    animationDelay: `${animationDelay}s`,
+                    transformOrigin: '52px 20px'
+                }}
+            >
+                <ellipse
+                    cx="52"
+                    cy="12"
+                    rx="4"
+                    ry="10"
+                    fill={color}
+                    opacity="1"
+                    transform="rotate(20 52 12)"
+                />
+            </g>
         </svg>
     );
 };

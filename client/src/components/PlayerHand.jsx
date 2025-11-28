@@ -64,7 +64,7 @@ const PlayerHand = ({ hand, color, onPieceClick, selectedStackIndex, isCurrentPl
                             onClick={() => isCurrentPlayer && stack.length > 0 && onPieceClick(index)}
                         >
                             {stack.length > 0 ? (
-                                <div className={`piece piece-${color} piece-size-${stack[stack.length - 1]}`}>
+                                <div className={`piece piece-${color} piece-size-${stack[stack.length - 1]}`} data-color={color}>
                                     <GoblinPiece
                                         color={color}
                                         size={stack[stack.length - 1]}

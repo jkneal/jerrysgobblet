@@ -76,10 +76,11 @@ const GameBoard = ({ board, onCellClick, currentPlayer, turn, selectedCell, last
                                 onClick={() => onCellClick(rowIndex, colIndex)}
                             >
                                 {cell.length > 0 && (
-                                    <div className={`piece piece-${cell[cell.length - 1].color} piece-size-${cell[cell.length - 1].size}`}>
+                                    <div className={`piece piece-${cell[cell.length - 1].color} piece-size-${cell[cell.length - 1].size}`} data-color={cell[cell.length - 1].color}>
                                         <GoblinPiece
                                             color={cell[cell.length - 1].color}
                                             size={cell[cell.length - 1].size}
+                                            isWinning={isWinningCell}
                                         />
                                     </div>
                                 )}

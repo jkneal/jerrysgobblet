@@ -66,9 +66,10 @@ const HowToPlay = () => {
                         <h2>Game Interface</h2>
                         <h3>🎨 Visual Indicators</h3>
                         <ul>
+                            <li><strong>Piece Size:</strong> Each goblin piece has a headband with trinkets - the number of trinkets shows the size (1 trinket = size 1, 2 trinkets = size 2, etc.)</li>
                             <li><strong>Turn Badge:</strong> Shows whose turn it is with their color</li>
                             <li><strong>Last Move:</strong> Recent moves are briefly highlighted in orange</li>
-                            <li><strong>Winning Row:</strong> When someone wins, the 4 winning pieces pulse with golden light and dance! 🎉</li>
+                            <li><strong>Winning Row:</strong> When someone wins, the 4 winning pieces pulse with golden light and dance! The trinkets flash like Christmas lights! 🎉</li>
                             <li><strong>Your Hand:</strong> Bottom area shows your available pieces (white background)</li>
                             <li><strong>Opponent's Hand:</strong> Top area shows opponent's pieces (dark background)</li>
                         </ul>
